@@ -607,4 +607,87 @@ export class Home implements OnInit, OnDestroy, AfterViewInit {
       default: return 'Location';
     }
   }
+
+  selectLocationOnMap(project: Project | null): void {
+    if (!project || !project.latitude || !project.longitude) {
+      console.warn('Project does not have valid coordinates');
+      return;
+    }
+
+    if (!this.mapComponent) {
+      console.warn('Map component not available');
+      return;
+    }
+
+    // Find the district and mouza for this location
+    const point = { lat: project.latitude, lng: project.longitude };
+    const district = this.findDistrictForPoint(point);
+    const mouza = this.findMouzaForPoint(point, district);
+
+    // Update selections if found
+    if (district) {
+      this.selectedDistrict = district;
+      this.mapSelectionService.selectDistrict(district);
+      this.updateMouzas();
+    }
+
+    if (mouza) {
+      this.selectedMouza = mouza;
+      this.mapSelectionService.selectMouza(mouza);
+    }
+
+    // Call the map component method to center on the location
+    this.mapComponent.centerOnLocation({
+      name: project.name,
+      latitude: project.latitude,
+      longitude: project.longitude,
+      type: project.type || 'default',
+      description: project.description || project.address
+    }, district, mouza);
+  }
+
+  private findDistrictForPoint(point: { lat: number; lng: number }): string | null {
+    if (!this.districtData || !this.districtData.features) {
+      return null;
+    }
+
+    for (const feature of this.districtData.features) {
+      if (this.isPointInPolygon(point, feature)) {
+        return feature.properties["District N"] || feature.properties.district || null;
+      }
+    }
+
+    return null;
+  }
+
+  private findMouzaForPoint(point: { lat: number; lng: number }, districtName: string | null): string | null {
+    if (!this.mouzaData || !this.mouzaData.features || !districtName) {
+      return null;
+    }
+
+    // First, find the district feature to filter mouzas
+    const districtFeature = this.districtData?.features?.find(
+      (f: any) => (f.properties["District N"] || f.properties.district) === districtName
+    );
+
+    if (!districtFeature) {
+      return null;
+    }
+
+    // Check each mouza to see if the point is inside it and also in the district
+    for (const mouzaFeature of this.mouzaData.features) {
+      // Check if mouza is in the district first
+      const mouzaCentroid = this.getFeatureCentroid(mouzaFeature);
+      if (!this.isPointInPolygon(mouzaCentroid, districtFeature)) {
+        continue; // Skip mouzas not in this district
+      }
+
+      // Check if the point is in this mouza
+      if (this.isPointInPolygon(point, mouzaFeature)) {
+        return mouzaFeature.properties["Mouza Name"] || mouzaFeature.properties.subdistrict || null;
+      }
+    }
+
+    return null;
+  }
 }

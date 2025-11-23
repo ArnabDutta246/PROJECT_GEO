@@ -6,7 +6,7 @@
         <a class="navbar-brand fw-light text-white" href="#" style="font-size: 14px;">ProjectGeo</a>
         <ul class="navbar-nav" style="font-size: 14px !important;">
             <li class="nav-item">
-                <a class="nav-link active text-white" aria-current="page" href="#">Projects</a>
+                <a class="nav-link active text-white" aria-current="page" href="/projects">Projects</a>
             </li>
             <li class="nav-item">
                 <a class="nav-link text-white" href="#">Employees</a>
@@ -174,9 +174,11 @@
                                                 {{ project.budget }}
                                             </span>
                                         </div>
-                                        <p class="small mb-2 text-body-secondary">
-                                            <i class="fa-solid fa-location-dot me-2 text-primary"></i>{{ project.address
-                                            }}
+                                        <p class="small mb-2 text-body-secondary" style="cursor: pointer;" 
+                                           (click)="selectLocationOnMap(project); $event.stopPropagation()" 
+                                           title="Click to view on map">
+                                            <i class="fa-solid fa-location-dot me-2 text-primary"></i>
+                                            <span class="text-primary text-decoration-underline">{{ project.address }}</span>
                                         </p>
                                         <div class="d-flex align-items-center justify-content-between">
                                             <span class="fw-semibold text-secondary">
@@ -224,10 +226,12 @@
                                     </span>
                                 </div>
                                 <ul class="list-unstyled mb-3 detail-list">
-                                    <li>
+                                    <li style="cursor: pointer;" 
+                                        (click)="selectLocationOnMap(selectedProject); $event.stopPropagation()" 
+                                        title="Click to view on map">
                                         <i class="fa-solid fa-location-dot me-2 text-danger"></i>
                                         <span class="label">Address:</span>
-                                        {{ selectedProject?.address }}
+                                        <span class="text-primary text-decoration-underline">{{ selectedProject?.address }}</span>
                                     </li>
                                     <li>
                                         <i class="fa-solid fa-phone me-2 text-success"></i>

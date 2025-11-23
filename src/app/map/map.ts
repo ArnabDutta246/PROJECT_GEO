@@ -1,4 +1,4 @@
-import { Component, AfterViewInit, Inject, PLATFORM_ID, ChangeDetectorRef, OnDestroy, ViewEncapsulation, NgZone, ViewChild, ElementRef } from '@angular/core';
+import { Component, AfterViewInit, Inject, PLATFORM_ID, ChangeDetectorRef, OnDestroy, ViewEncapsulation, NgZone, ViewChild, ElementRef, ApplicationRef, signal, computed, effect } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { CommonModule } from '@angular/common';
 import { MapSelectionService } from '../map-selection.service';
@@ -11,7 +11,7 @@ import { Subscription } from 'rxjs';
   encapsulation: ViewEncapsulation.None,
   template: `
     <div id="map"></div>
-    <div *ngIf="showInfoPanel" id="infoPanel" class="info-panel" style="position: fixed !important; bottom: 20px !important; right: 20px !important; width: 250px !important; background: white !important; border: 2px solid #0066cc !important; border-radius: 8px !important; padding: 15px !important; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important; z-index: 99999 !important;">
+    <!-- <div *ngIf="showInfoPanel" id="infoPanel" class="info-panel" style="position: fixed !important; bottom: 20px !important; right: 20px !important; width: 250px !important; background: white !important; border: 2px solid #0066cc !important; border-radius: 8px !important; padding: 15px !important; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important; z-index: 99999 !important;">
       <button (click)="hideInfoPanel()" style="position: absolute; top: 8px; right: 8px; background: #dc3545; color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer;">×</button>
       <h4 style="margin: 0 0 12px 0; color: #0066cc; font-size: 16px; border-bottom: 1px solid #ddd; padding-bottom: 8px; padding-right: 30px;">Selected Information</h4>
       <div style="margin: 8px 0; font-size: 13px;">
@@ -30,14 +30,16 @@ import { Subscription } from 'rxjs';
         <strong style="color: #333; display: inline-block; width: 90px;">Selected Mouza:</strong> 
         <span id="selectedMouza" style="color: #dc3545; font-weight: bold;">{{ selectedMouza || 'None' }}</span>
       </div>
-    </div>
-    <!-- Location Details Panel -->
-    <div *ngIf="showLocationDetails && selectedLocation" 
-         #locationDetailsPanel
+    </div> -->
+    <!-- Location Details Panel - Always in DOM, visibility controlled by style -->
+    <div #locationDetailsPanel
          class="location-details-panel"
          [style.left.px]="panelPosition.x"
          [style.top.px]="panelPosition.y"
-         [style.transform]="'none'">
+         [style.transform]="'none'"
+         [style.display]="shouldShowPanelValue ? 'flex' : 'none'"
+         [style.visibility]="shouldShowPanelValue ? 'visible' : 'hidden'"
+         [attr.data-visible]="shouldShowPanelValue">
       <div class="panel-drag-handle" 
            (mousedown)="startDrag($event)"
            (touchstart)="startDrag($event)">
@@ -46,20 +48,90 @@ import { Subscription } from 'rxjs';
                 (click)="hideLocationDetailsPanel()"
                 (mousedown)="$event.stopPropagation()"
                 (touchstart)="$event.stopPropagation()">×</button>
-        <h4 class="location-title">{{ selectedLocation.name }}</h4>
+        <h4 class="location-title">{{ selectedLocation()?.name }}</h4>
+        
       </div>
       <div class="location-info">
-        <div class="location-type" [style.background-color]="getTypeColor(selectedLocation.type)">
-          <strong>Type:</strong> 
-          <span>{{ getTypeLabel(selectedLocation.type) }}</span>
+        <!-- Tab Navigation -->
+         <div style="display:flex; align-items:center; justify-content:flex-end;">
+           <a  href="/projects" class="projects-link" target="_blank" style="color:#0066cc; text-decoration:none; font-weight:500; font-size:13px;">
+             View Project Details
+           </a>
+           <i class="fas fa-external-link-alt" style="color:#0066cc"></i>
+         </div>
+        <div class="tab-navigation">
+          <button class="tab-button" 
+                  [class.active]="activeTab === 'info'"
+                  (click)="setActiveTab('info')">
+            INFO
+          </button>
+          <button class="tab-button" 
+                  [class.active]="activeTab === 'beneficiaries'"
+                  (click)="setActiveTab('beneficiaries')">
+            BENEFICIERIES DETAILS
+          </button>
+          <button class="tab-button" 
+                  [class.active]="activeTab === 'documentation'"
+                  (click)="setActiveTab('documentation')">
+            DOCUMENTATION
+          </button>
+          <button class="tab-button" 
+                  [class.active]="activeTab === 'photovideo'"
+                  (click)="setActiveTab('photovideo')">
+            PHOTO & VIDEOGRAPHY
+          </button>
         </div>
-        <div class="location-coords">
-          <strong>Coordinates:</strong> 
-          <span>{{ selectedLocation.latitude.toFixed(4) }}, {{ selectedLocation.longitude.toFixed(4) }}</span>
-        </div>
-        <div class="location-description">
-          <strong>Description:</strong>
-          <p>{{ selectedLocation.description }}</p>
+
+        <!-- Tab Content -->
+        <div class="tab-content">
+          <!-- INFO Tab -->
+          <div *ngIf="activeTab === 'info'" [class.active]="activeTab === 'info'"  class="tab-pane">
+            <div class="location-type" [style.background-color]="getTypeColor(selectedLocation()?.type)">
+              <strong>Type:</strong> 
+              <span>{{ getTypeLabel(selectedLocation()?.type) }}</span>
+            </div>
+            <div class="location-coords">
+              <strong>Coordinates:</strong> 
+              <span>{{ selectedLocation()?.latitude?.toFixed(4) }}, {{ selectedLocation()?.longitude?.toFixed(4) }}</span>
+            </div>
+            <div class="location-description">
+              <strong>Description:</strong>
+              <p>{{ selectedLocation()?.description }}</p>
+            </div>
+          </div>
+
+          <!-- BENEFICIERIES DETAILS Tab -->
+          <div *ngIf="activeTab === 'beneficiaries'" [class.active]="activeTab === 'beneficiaries'" class="tab-pane">
+            <div class="tab-section">
+              <h5>Beneficiaries Information</h5>
+              <p class="text-muted">Beneficiaries details will be displayed here.</p>
+              <div style="padding: 20px; background: #f8f9fa; border-radius: 6px; margin-top: 15px;">
+                <p style="color: #666; margin: 0;">Content area for beneficiaries information</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- DOCUMENTATION Tab -->
+          <div *ngIf="activeTab === 'documentation'" [class.active]="activeTab === 'documentation'" class="tab-pane">
+            <div class="tab-section">
+              <h5>Documentation</h5>
+              <p class="text-muted">Documentation files will be displayed here.</p>
+              <div style="padding: 20px; background: #f8f9fa; border-radius: 6px; margin-top: 15px;">
+                <p style="color: #666; margin: 0;">Content area for documentation files</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- PHOTO & VIDEOGRAPHY Tab -->
+          <div *ngIf="activeTab === 'photovideo'" [class.active]="activeTab === 'photovideo'" class="tab-pane">
+            <div class="tab-section">
+              <h5>Photos & Videos</h5>
+              <p class="text-muted">Photos and videos will be displayed here.</p>
+              <div style="padding: 20px; background: #f8f9fa; border-radius: 6px; margin-top: 15px;">
+                <p style="color: #666; margin: 0;">Content area for photos and videos</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -194,9 +266,12 @@ import { Subscription } from 'rxjs';
     }
 
     .location-details-panel .location-info {
-      padding: 20px;
+      padding: 10px;
       overflow-y: auto;
       flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
     }
     
     .location-details-panel .location-title {
@@ -261,6 +336,99 @@ import { Subscription } from 'rxjs';
       color: #555;
       text-align: justify;
       line-height: 1.7;
+    }
+    
+    /* Tab Navigation Styles */
+    .tab-navigation {
+      display: flex;
+      border-bottom: 2px solid #e0e0e0;
+      margin-bottom: 15px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    
+    .tab-button {
+      flex: 1;
+      min-width: 0;
+      padding: 10px 8px;
+      background: transparent;
+      border: none;
+      border-bottom: 3px solid transparent;
+      color: #666;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .tab-button:hover {
+      color: #ff6b35;
+      background: rgba(255, 107, 53, 0.05);
+    }
+    
+    .tab-button.active {
+      color: #ff6b35;
+      border-bottom-color: #ff6b35;
+      background: rgba(255, 107, 53, 0.08);
+    }
+    
+    /* Tab Content Styles */
+    .tab-content {
+      min-height: 200px;
+      max-height: calc(80vh - 250px);
+      overflow-y: auto;
+      display: block;
+      width: 100%;
+      position: relative;
+    }
+    
+    .tab-pane {
+      animation: fadeIn 0.3s ease-in;
+      padding: 10px 0;
+      display: block;
+      min-height: 150px;
+    }
+    
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(5px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .tab-section {
+      padding: 10px 0;
+    }
+    
+    .tab-section h5 {
+      color: #333;
+      font-size: 16px;
+      font-weight: 600;
+      margin: 0 0 10px 0;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #f0f0f0;
+    }
+    
+    .tab-section .text-muted {
+      color: #999;
+      font-size: 13px;
+      font-style: italic;
+      margin: 0;
+    }
+    
+    /* Ensure location info elements are visible in tabs */
+    .tab-pane .location-type,
+    .tab-pane .location-coords,
+    .tab-pane .location-description {
+      margin-bottom: 15px;
     }
     
     .location-details-panel .close-location-details {
@@ -366,8 +534,33 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   private locationMarkers: any[] = [];
   private locationMarkerMap: Map<string, any> = new Map(); // Map location name to marker
   private selectedMarker: any = null;
-  showLocationDetails: boolean = false;
-  selectedLocation: any = null;
+  showLocationDetails = signal<boolean>(false);
+  selectedLocation = signal<any>(null);
+  activeTab: string = 'info'; // Active tab in location details panel
+  
+  // Computed signal for panel visibility
+  shouldShowPanel = computed(() => {
+    const show = this.showLocationDetails();
+    const location = this.selectedLocation();
+    const result = show && location && location.name;
+    return result;
+  });
+  
+  // Simple getter as fallback (doesn't rely on computed signal)
+  get shouldShowPanelValue(): boolean {
+    const show = this.showLocationDetails();
+    const location = this.selectedLocation();
+    return show && location && location.name;
+  }
+  
+  // Legacy properties for template compatibility
+  get showLocationDetailsValue(): boolean {
+    return this.showLocationDetails();
+  }
+  
+  get selectedLocationValue(): any {
+    return this.selectedLocation();
+  }
   
   // Panel drag state
   @ViewChild('locationDetailsPanel', { static: false }) panelElementRef!: ElementRef<HTMLElement>;
@@ -384,9 +577,9 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     // { name: 'Terrain', label: 'Terrain' },
     { name: 'Google Streets', label: 'Google Streets' },
     // { name: 'Google Satellite', label: 'Google Satellite' },
-    // { name: 'Google Hybrid', label: 'Google Hybrid' },
+    { name: 'Google Hybrid', label: 'Google Hybrid' },
     // { name: 'CartoDB Light', label: 'CartoDB Light' },
-    { name: 'CartoDB Dark', label: 'CartoDB Dark' }
+    // { name: 'CartoDB Dark', label: 'CartoDB Dark' }
   ];
 
   currentLayerName: string = 'Satellite';
@@ -399,13 +592,42 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     @Inject(PLATFORM_ID) private platformId: Object,
     private cdr: ChangeDetectorRef,
     private mapSelectionService: MapSelectionService,
-    private ngZone: NgZone
-  ) {}
+    private ngZone: NgZone,
+    private appRef: ApplicationRef
+  ) {
+    // Effect to track panel visibility changes
+    effect(() => {
+      const shouldShow = this.shouldShowPanel();
+      const location = this.selectedLocation();
+      
+      if (shouldShow) {
+        // Use requestAnimationFrame to check DOM after Angular renders
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            const panelElement = document.querySelector('.location-details-panel');
+          }, 0);
+        });
+      }
+    });
+  }
 
   async ngAfterViewInit(): Promise<void> {
     if (isPlatformBrowser(this.platformId)) {
       await this.initMap();
       this.subscribeToSelections();
+      
+      // Ensure panel element exists in DOM (even if hidden)
+      setTimeout(() => {
+        const panelElement = document.querySelector('.location-details-panel');
+        const viewChildElement = this.panelElementRef?.nativeElement;
+        
+        if (panelElement) {
+          (panelElement as HTMLElement).style.display = 'none';
+        }
+        if (viewChildElement) {
+          viewChildElement.style.display = 'none';
+        }
+      }, 100);
     }
   }
 
@@ -465,7 +687,6 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     // Listen to layer selection from home page
     const layerSub = this.mapSelectionService.selectedLayer$.subscribe(layerName => {
       if (layerName) {
-        console.log('Map component received layer change request:', layerName);
         this.switchLayer(layerName);
       }
     });
@@ -578,11 +799,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   }
 
   switchLayer(layerName: string): void {
-    console.log(`switchLayer called in MapComponent with: ${layerName}`);
-    console.log(`isMapReady: ${this.isMapReady}, map exists: ${!!this.map}`);
-    
     if (!this.isMapReady || !this.map) {
-      console.warn('Map is not initialized yet. Please wait...');
       // Retry after a short delay if map is still initializing
       setTimeout(() => {
         if (this.isMapReady && this.map) {
@@ -595,7 +812,6 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     }
     
     if (!this.baseLayers || Object.keys(this.baseLayers).length === 0) {
-      console.warn('Base layers not initialized yet');
       setTimeout(() => {
         if (this.baseLayers && Object.keys(this.baseLayers).length > 0) {
           this.switchLayer(layerName);
@@ -605,7 +821,6 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     }
     
     if (!this.baseLayers[layerName]) {
-      console.warn(`Layer "${layerName}" not found. Available layers:`, Object.keys(this.baseLayers));
       return;
     }
     
@@ -613,7 +828,6 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       // Remove current layer if it exists
       if (this.currentLayer && this.map.hasLayer(this.currentLayer)) {
         this.map.removeLayer(this.currentLayer);
-        console.log('Removed current layer');
       }
       
       // Add new layer
@@ -624,10 +838,9 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       // Force map to redraw
       this.map.invalidateSize();
       
-      console.log(`Successfully switched to layer: ${layerName}`);
       this.cdr.detectChanges();
     } catch (error) {
-      console.error('Error switching layer:', error);
+      console.log('Error switching layer:', error);
     }
   }
 
@@ -668,7 +881,6 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
   getCurrentLocation(): void {
     if (!navigator.geolocation) {
-      console.log('Geolocation is not supported by this browser.');
       return;
     }
 
@@ -705,9 +917,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   }
 
   hideInfoPanel(): void {
-    console.log('hideInfoPanel called, current showInfoPanel:', this.showInfoPanel);
     this.showInfoPanel = false;
-    console.log('showInfoPanel set to:', this.showInfoPanel);
     
     // Force change detection
     this.cdr.markForCheck();
@@ -717,7 +927,6 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     setTimeout(() => {
       this.cdr.markForCheck();
       this.cdr.detectChanges();
-      console.log('Panel should be hidden now, showInfoPanel:', this.showInfoPanel);
     }, 0);
   }
 
@@ -743,51 +952,6 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     await this.loadDistrictData();
   }
 
-  private createSampleDistricts(): void {
-    // Create sample district polygons (simple rectangles for demo)
-    const sampleDistricts = [
-      { name: 'Itanagar', bounds: [[28.0, 93.5], [28.5, 94.0]] },
-      { name: 'Tawang', bounds: [[27.5, 91.5], [28.0, 92.5]] },
-      { name: 'Bomdila', bounds: [[27.0, 92.5], [27.5, 93.5]] },
-      { name: 'Changlang', bounds: [[27.0, 95.5], [27.5, 96.5]] },
-      { name: 'Anjaw', bounds: [[27.5, 95.0], [28.0, 96.0]] },
-      { name: 'Kamle', bounds: [[26.5, 94.0], [27.0, 95.0]] },
-      { name: 'Dibang Valley', bounds: [[28.0, 95.5], [28.5, 96.5]] },
-      { name: 'East Kameng', bounds: [[26.5, 93.0], [27.0, 94.0]] }
-    ];
-
-    const features = sampleDistricts.map(dist => {
-      const [sw, ne] = dist.bounds;
-      return {
-        type: 'Feature',
-        properties: {
-          'District N': dist.name,
-          district: dist.name
-        },
-        geometry: {
-          type: 'Polygon',
-          coordinates: [[
-            [sw[1], sw[0]],
-            [ne[1], sw[0]],
-            [ne[1], ne[0]],
-            [sw[1], ne[0]],
-            [sw[1], sw[0]]
-          ]]
-        }
-      };
-    });
-
-    this.districtData = {
-      type: "FeatureCollection",
-      features
-    };
-
-    this.mouzaData = {
-      type: "FeatureCollection",
-      features: []
-    };
-  }
-
   private async loadDistrictData(): Promise<void> {
     try {
       // Load JavaScript files that export variables
@@ -804,19 +968,13 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       this.mouzaData = (window as any).json_ArunachalPradeshMouza_1;
       
       if (!this.districtData) {
-        console.error('District data not found. Make sure the JS file exports json_ArunachalPradeshDistricts_2');
         throw new Error('District data not loaded');
-      }
-      if (!this.mouzaData) {
-        console.warn('Mouza data not found. Make sure the JS file exports json_ArunachalPradeshMouza_1');
       }
       
       this.setupDistrictLayer();
     } catch (error) {
       console.error('Error loading data files:', error);
       // Fall back to sample data if real data fails
-      console.log('Falling back to sample data...');
-      this.createSampleDistricts();
       this.setupDistrictLayer();
     }
   }
@@ -837,7 +995,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     const districtMap = new Map<string, any>();
 
     this.geojsonLayer = this.L.geoJSON(this.districtData, {
-      style: { color: "blue", weight: 1, fillOpacity: 0.1 },
+      style: { color: "blue", weight: 1, fillOpacity: 0 },
       onEachFeature: (feature: any, layer: any) => {
         const name = feature.properties["District N"] || feature.properties.district;
         districtMap.set(name, layer);
@@ -875,13 +1033,17 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     return districtName === this.selectedDistrictName;
   }
 
-  highlightDistrict(layer: any, districtName: string): void {
+  highlightDistrict(layer: any, districtName: string, mouzaToSelect?: string | null): void {
     // Prevent recursive calls
     if (this.isHighlighting && this.selectedDistrict === districtName) {
       return;
     }
     
     this.isHighlighting = true;
+    
+    // Store current location panel state to preserve it
+    const preserveLocationPanel = this.showLocationDetails();
+    const preserveSelectedLocation = this.selectedLocation();
     
     // Reset previous active layer
     if (this.activeLayer && this.geojsonLayer) {
@@ -898,16 +1060,18 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     layer.setStyle({ 
       color: "red", 
       weight: 3, 
-      fillColor: "red", 
-      fillOpacity: 0.3 
+      // fillColor: "red", 
+      fillOpacity: 0 
     });
     
-    // Fit bounds with padding
-    const bounds = layer.getBounds();
-    this.map.fitBounds(bounds, {
-      padding: [20, 20],
-      maxZoom: 12
-    });
+    // Fit bounds with padding - but don't override if we have a location panel showing
+    if (!preserveLocationPanel) {
+      const bounds = layer.getBounds();
+      this.map.fitBounds(bounds, {
+        padding: [20, 20],
+        maxZoom: 12
+      });
+    }
     
     this.activeLayer = layer;
     this.selectedDistrictFeature = layer.feature;
@@ -915,18 +1079,24 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     
     // Force show info panel - do this FIRST
     this.showInfoPanel = true;
-    console.log('highlightDistrict called for:', districtName);
-    console.log('showInfoPanel set to:', this.showInfoPanel);
-    console.log('selectedDistrict:', this.selectedDistrict);
+    
+    // Restore location panel state if it was showing - do this BEFORE mouza loading
+    if (preserveLocationPanel && preserveSelectedLocation) {
+      this.ngZone.run(() => {
+        this.showLocationDetails.set(true);
+        this.selectedLocation.set(preserveSelectedLocation);
+        this.cdr.markForCheck();
+        this.cdr.detectChanges();
+      });
+    }
 
     // Update mouza display
-    this.loadMouzasForDistrict(districtName, layer);
+    this.loadMouzasForDistrict(districtName, layer, mouzaToSelect);
     
     // Force change detection immediately in Angular zone
     this.ngZone.run(() => {
       this.cdr.markForCheck();
       this.cdr.detectChanges();
-      console.log('Change detection in ngZone, showInfoPanel:', this.showInfoPanel);
     });
     
     // Notify service AFTER change detection to update dropdowns
@@ -934,6 +1104,16 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     setTimeout(() => {
       this.mapSelectionService.selectDistrict(districtName);
       this.isHighlighting = false;
+      
+      // Re-ensure location panel is still visible
+      if (preserveLocationPanel && preserveSelectedLocation) {
+        this.ngZone.run(() => {
+          this.showLocationDetails.set(true);
+          this.selectedLocation.set(preserveSelectedLocation);
+          this.cdr.markForCheck();
+          this.cdr.detectChanges();
+        });
+      }
     }, 100);
     
     // Also trigger delayed change detection
@@ -941,18 +1121,20 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       this.ngZone.run(() => {
         this.cdr.markForCheck();
         this.cdr.detectChanges();
-        console.log('Delayed change detection, showInfoPanel:', this.showInfoPanel);
-        const panel = document.getElementById('infoPanel');
-        console.log('Panel element exists:', !!panel);
-        if (panel) {
-          console.log('Panel display style:', window.getComputedStyle(panel).display);
-          console.log('Panel visibility:', window.getComputedStyle(panel).visibility);
+        
+        // Re-ensure location panel is visible if it should be
+        if (preserveLocationPanel && preserveSelectedLocation && !this.showLocationDetails()) {
+          this.showLocationDetails.set(true);
+          this.selectedLocation.set(preserveSelectedLocation);
+          this.cdr.markForCheck();
+          this.cdr.detectChanges();
+          this.appRef.tick();
         }
       });
     }, 200);
   }
 
-  private loadMouzasForDistrict(districtName: string, districtLayer: any): void {
+  private loadMouzasForDistrict(districtName: string, districtLayer: any, mouzaToSelect?: string | null): void {
     if (!this.mouzaData || !this.mouzaData.features) return;
 
     // Clear previous mouzas
@@ -963,10 +1145,6 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
     const districtFeature = districtLayer.feature;
     const districtBounds = districtLayer.getBounds();
-
-    console.log('Selected district:', districtName);
-    console.log('District bounds:', districtBounds);
-    console.log('District feature:', districtFeature);
 
     // Load Mouza GeoJSON with polygon-based filtering (similar to HTML file)
     this.mouzaLayer = this.L.geoJSON(this.mouzaData, {
@@ -981,28 +1159,23 @@ export class MapComponent implements AfterViewInit, OnDestroy {
           const isCentroidInDistrict = this.isPointInPolygon(mouzaCentroid, districtFeature);
           
           if (isCentroidInDistrict) {
-            console.log(`✓ Mouza "${mouzaName}" is within district polygon`);
             return true;
           } else {
-            console.log(`✗ Mouza "${mouzaName}" is outside district polygon`);
             return false;
           }
           
         } catch (error) {
-          console.warn('Error processing Mouza:', mouzaName, error);
           // Fallback to bounds checking if polygon check fails
           try {
             const mouzaCentroid = this.getFeatureCentroid(f);
             const isInBounds = districtBounds.contains(mouzaCentroid);
-            console.log(`Fallback bounds check for Mouza "${mouzaName}":`, isInBounds);
             return isInBounds;
           } catch (fallbackError) {
-            console.warn('Fallback also failed:', fallbackError);
             return false;
           }
         }
       },
-      style: { color: "green", weight: 1, fillOpacity: 0.2 },
+      style: { color: '#9A1FFF', weight: 1, fillOpacity: 0 },
       onEachFeature: (feature: any, layer: any) => {
         const mouzaName = feature.properties["Mouza Name"] || feature.properties.subdistrict;
         layer.on('click', () => {
@@ -1019,8 +1192,24 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       }
     }).addTo(this.map);
 
-    console.log(`Found ${this.mouzaCount} Mouzas in ${districtName} using polygon filtering`);
     this.updateInfoPanel();
+
+    // Select the mouza if provided (after layer is loaded)
+    if (mouzaToSelect && this.mouzaLayer) {
+      setTimeout(() => {
+        this.mouzaLayer.eachLayer((layer: any) => {
+          const feature = layer.feature;
+          const name = feature.properties["Mouza Name"] || feature.properties.subdistrict;
+          if (name === mouzaToSelect) {
+            this.selectedMouza = mouzaToSelect;
+            this.highlightMouza(feature, layer);
+            this.mapSelectionService.selectMouza(mouzaToSelect);
+            this.cdr.detectChanges();
+            return;
+          }
+        });
+      }, 100);
+    }
   }
 
   private getFeatureCentroid(feature: any): any {
@@ -1212,14 +1401,13 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       style: {
         color: '#ff6b35',
         weight: 4,
-        fillColor: '#ff6b35',
-        fillOpacity: 0.3
+        // fillColor: '#ff6b35',
+        fillOpacity: 0
       }
     }).addTo(this.map);
     
     // Ensure info panel is visible when mouza is selected
     this.showInfoPanel = true;
-    console.log('Mouza clicked, showInfoPanel:', this.showInfoPanel);
     
     // Update info panel with mouza information
     this.updateInfoPanel();
@@ -1231,7 +1419,6 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     setTimeout(() => {
       this.cdr.markForCheck();
       this.cdr.detectChanges();
-      console.log('Mouza change detection triggered, showInfoPanel:', this.showInfoPanel);
     }, 10);
   }
 
@@ -1371,7 +1558,6 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
   private addLocationMarkers(): void {
     if (!this.map || !this.L) {
-      console.warn('Map or Leaflet not initialized. Cannot add location markers.');
       return;
     }
 
@@ -1390,7 +1576,6 @@ export class MapComponent implements AfterViewInit, OnDestroy {
         // Stop event propagation to prevent map click and other layer interactions
         this.L.DomEvent.stop(e);
         
-        console.log('Marker clicked:', location.name);
         this.ngZone.run(() => {
           this.showLocationDetailsPanel(location, marker);
         });
@@ -1418,30 +1603,79 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     // Clear previous marker highlight
     this.clearMarkerHighlight();
     
-    // Set new selected marker and location
-    this.selectedMarker = marker;
-    this.selectedLocation = location;
-    this.showLocationDetails = true;
+    // Create location object first
+    const locationObj = {
+      name: location.name || 'Unknown Location',
+      latitude: location.latitude,
+      longitude: location.longitude,
+      type: location.type || 'default',
+      description: location.description || location.name || 'No description available'
+    };
     
     // Initialize panel position to center of screen
     this.initializePanelPosition();
     
-    // Highlight the selected marker
-    this.highlightMarker(marker);
+    // Update signals - do this first
+    this.selectedMarker = marker;
+    this.selectedLocation.set(locationObj);
+    this.showLocationDetails.set(true);
+    this.activeTab = 'info'; // Reset to INFO tab when panel opens
     
-    console.log('Location marker clicked, showLocationDetails:', this.showLocationDetails);
-    console.log('Selected location:', this.selectedLocation);
+    // Check if element exists immediately
+    let panelElement = document.querySelector('.location-details-panel') as HTMLElement;
     
-    // Force change detection immediately
-    this.cdr.markForCheck();
-    this.cdr.detectChanges();
+    // If element doesn't exist, try ViewChild
+    if (!panelElement && this.panelElementRef?.nativeElement) {
+      panelElement = this.panelElementRef.nativeElement;
+    }
     
-    // Also trigger delayed change detection to ensure it's applied
-    setTimeout(() => {
+    // Now run change detection inside Angular zone
+    this.ngZone.run(() => {
+      // Force multiple change detection cycles
       this.cdr.markForCheck();
       this.cdr.detectChanges();
-      console.log('Delayed change detection, showLocationDetails:', this.showLocationDetails);
-    }, 10);
+      this.appRef.tick();
+      
+      // Check again after change detection
+      setTimeout(() => {
+        // Try ViewChild first
+        if (this.panelElementRef?.nativeElement) {
+          panelElement = this.panelElementRef.nativeElement;
+        } else {
+          // Try querySelector
+          panelElement = document.querySelector('.location-details-panel') as HTMLElement;
+        }
+        
+        if (panelElement) {
+          // Force show the panel
+          panelElement.style.display = 'flex';
+          panelElement.style.visibility = 'visible';
+          panelElement.style.opacity = '1';
+          panelElement.style.left = this.panelPosition.x + 'px';
+          panelElement.style.top = this.panelPosition.y + 'px';
+        } else {
+          // Try one more aggressive change detection
+          this.cdr.markForCheck();
+          this.cdr.detectChanges();
+          this.appRef.tick();
+          
+          // Check one more time
+          setTimeout(() => {
+            panelElement = document.querySelector('.location-details-panel') as HTMLElement;
+            if (panelElement) {
+              panelElement.style.display = 'flex';
+              panelElement.style.visibility = 'visible';
+              panelElement.style.opacity = '1';
+            }
+          }, 100);
+        }
+      }, 0);
+    });
+    
+    // Highlight the selected marker (outside zone as it's Leaflet operation)
+    if (marker && marker.getElement) {
+      this.highlightMarker(marker);
+    }
   }
 
   private initializePanelPosition(): void {
@@ -1449,8 +1683,8 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     const panelWidth = 400;
     const panelHeight = 300; // Approximate height
     this.panelPosition = {
-      x: (window.innerWidth - panelWidth) / 2,
-      y: (window.innerHeight - panelHeight) / 2
+      x: Math.max(0, (window.innerWidth - panelWidth) / 2),
+      y: Math.max(0, (window.innerHeight - panelHeight) / 2)
     };
   }
 
@@ -1526,14 +1760,25 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   }
 
   hideLocationDetailsPanel(): void {
-    this.showLocationDetails = false;
-    this.selectedLocation = null;
+    this.showLocationDetails.set(false);
+    this.selectedLocation.set(null);
     this.clearMarkerHighlight();
+    this.cdr.detectChanges();
+  }
+
+  setActiveTab(tab: string): void {
+    this.activeTab = tab;
+    this.cdr.markForCheck();
     this.cdr.detectChanges();
   }
 
   private highlightMarker(marker: any): void {
     if (!marker) return;
+    
+    // Check if marker has Leaflet methods (is a real marker, not a temp object)
+    if (typeof marker.setZIndexOffset !== 'function') {
+      return; // Skip highlighting if it's not a real Leaflet marker
+    }
     
     // Get the icon element
     const iconElement = marker.getElement();
@@ -1555,19 +1800,22 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
   private clearMarkerHighlight(): void {
     if (this.selectedMarker) {
-      const iconElement = this.selectedMarker.getElement();
-      if (iconElement) {
-        const markerDiv = iconElement.querySelector('div');
-        if (markerDiv) {
-          // Reset styles
-          markerDiv.style.transform = 'scale(1)';
-          markerDiv.style.boxShadow = '0 0 0 2px rgba(0,0,0,0.3)';
-          markerDiv.style.zIndex = 'auto';
-          markerDiv.classList.remove('selected-marker');
+      // Check if marker has Leaflet methods (is a real marker, not a temp object)
+      if (typeof this.selectedMarker.setZIndexOffset === 'function') {
+        const iconElement = this.selectedMarker.getElement();
+        if (iconElement) {
+          const markerDiv = iconElement.querySelector('div');
+          if (markerDiv) {
+            // Reset styles
+            markerDiv.style.transform = 'scale(1)';
+            markerDiv.style.boxShadow = '0 0 0 2px rgba(0,0,0,0.3)';
+            markerDiv.style.zIndex = 'auto';
+            markerDiv.classList.remove('selected-marker');
+          }
         }
+        this.selectedMarker.setZIndexOffset(0);
+        this.selectedMarker.setOpacity(1);
       }
-      this.selectedMarker.setZIndexOffset(0);
-      this.selectedMarker.setOpacity(1);
     }
     this.selectedMarker = null;
   }
@@ -1589,6 +1837,163 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       case 'city': return 'City';
       case 'national_park': return 'National Park';
       default: return 'Location';
+    }
+  }
+
+  shouldShowLocationPanel(): boolean {
+    const loc = this.selectedLocation();
+    const shouldShow = this.showLocationDetails() && 
+                      loc && 
+                      loc.name && 
+                      loc.name.length > 0;
+    return shouldShow;
+  }
+
+  centerOnLocation(location: { name: string; latitude: number; longitude: number; type?: string; description?: string }, districtName?: string | null, mouzaName?: string | null): void {
+    // Show the panel immediately even if map isn't ready
+    const locationInfo = {
+      name: location.name,
+      latitude: location.latitude,
+      longitude: location.longitude,
+      type: location.type || 'default',
+      description: location.description || location.name
+    };
+    
+    // Show panel first, regardless of map state
+    this.ngZone.run(() => {
+      // Create a temporary marker object for the panel
+      const tempMarker = { getElement: () => null };
+      this.showLocationDetailsPanel(locationInfo, tempMarker);
+    });
+    
+    if (!this.map || !this.L) {
+      // Wait for map to be ready, then continue with map operations
+      const checkMapReady = () => {
+        if (this.map && this.L && this.isMapReady) {
+          // Map is ready, now do the map operations
+          this.continueCenterOnLocation(location, districtName, mouzaName);
+        } else {
+          setTimeout(checkMapReady, 100);
+        }
+      };
+      setTimeout(checkMapReady, 100);
+      return;
+    }
+    
+    // Map is ready, continue with full operations
+    this.continueCenterOnLocation(location, districtName, mouzaName);
+  }
+  
+  private continueCenterOnLocation(location: { name: string; latitude: number; longitude: number; type?: string; description?: string }, districtName?: string | null, mouzaName?: string | null): void {
+    if (!this.map || !this.L) {
+      return;
+    }
+
+    // Clear previous marker highlight
+    this.clearMarkerHighlight();
+
+    // Check if marker already exists for this location
+    let marker = this.locationMarkerMap.get(location.name);
+
+    if (!marker) {
+      // Create a new marker for this location
+      const locationIcon = this.getMarkerIconByType(location.type || 'default');
+      marker = this.L.marker([location.latitude, location.longitude], {
+        icon: locationIcon,
+        interactive: true,
+        bubblingMouseEvents: false
+      }).addTo(this.map);
+
+      // Add click event to marker
+      marker.on('click', (e: any) => {
+        this.L.DomEvent.stop(e);
+        this.ngZone.run(() => {
+          const locationInfo = {
+            name: location.name,
+            latitude: location.latitude,
+            longitude: location.longitude,
+            type: location.type || 'default',
+            description: location.description || location.name
+          };
+          this.showLocationDetailsPanel(locationInfo, marker);
+        });
+      });
+
+      // Store the marker
+      this.locationMarkers.push(marker);
+      this.locationMarkerMap.set(location.name, marker);
+    }
+
+    // Center map on location
+    this.map.setView([location.latitude, location.longitude], 13, {
+      animate: true,
+      duration: 0.5
+    });
+
+    // Highlight the marker
+    this.selectedMarker = marker;
+    this.highlightMarker(marker);
+
+    // Update the location panel with the actual marker (panel already shown in centerOnLocation)
+    this.ngZone.run(() => {
+      const locationInfo = {
+        name: location.name,
+        latitude: location.latitude,
+        longitude: location.longitude,
+        type: location.type || 'default',
+        description: location.description || location.name
+      };
+      // Only update if panel isn't already showing this location
+      const currentLocation = this.selectedLocation();
+      if (!this.showLocationDetails() || !currentLocation || currentLocation.name !== locationInfo.name) {
+        this.showLocationDetailsPanel(locationInfo, marker);
+      } else {
+        // Just update the marker reference
+        this.selectedMarker = marker;
+        this.highlightMarker(marker);
+        this.cdr.markForCheck();
+        this.cdr.detectChanges();
+      }
+    });
+    // Select district and mouza if provided (after panel is shown)
+    if (districtName) {
+      // Small delay to ensure panel is rendered first
+      setTimeout(() => {
+        // Find and highlight the district
+        if (this.districtLayerMap.has(districtName)) {
+          const district = this.districtLayerMap.get(districtName);
+          this.highlightDistrict(district.layer, districtName, mouzaName);
+        } else {
+          // Try to find the district in the geojson layer
+          if (this.geojsonLayer) {
+            this.geojsonLayer.eachLayer((layer: any) => {
+              const feature = layer.feature;
+              const name = feature.properties["District N"] || feature.properties.district;
+              if (name === districtName) {
+                this.highlightDistrict(layer, districtName, mouzaName);
+                return;
+              }
+            });
+          }
+        }
+        // Re-ensure panel is still visible after district selection
+        // Store the location info before district operations
+        const savedLocation = this.selectedLocation();
+        const savedShowLocation = this.showLocationDetails();
+        
+        setTimeout(() => {
+          this.ngZone.run(() => {
+            // Restore location panel if it was showing
+            if (savedShowLocation && savedLocation) {
+              this.showLocationDetails.set(true);
+              this.selectedLocation.set(savedLocation);
+            }
+            this.cdr.markForCheck();
+            this.cdr.detectChanges();
+            this.appRef.tick();
+          });
+        }, 100);
+      }, 300);
     }
   }
 }

@@ -1,0 +1,398 @@
+<nav class="navbar navbar-expand-lg py-1 px-10 border-bottom bg-dark" style="
+    padding: 0 30px;
+    border-bottom: 5px solid #efefef !important;
+">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-light text-white" href="#" style="font-size: 14px;">ProjectGeo</a>
+        <ul class="navbar-nav" style="font-size: 14px !important;">
+            <li class="nav-item">
+                <a class="nav-link active text-white" aria-current="page" href="/projects">Projects</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-white" href="#">Employees</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-white" href="#">Tasks</a>
+            </li>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown"
+                    aria-expanded="false">
+                    Settings
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item text-white" href="#">Action</a></li>
+                    <li><a class="dropdown-item text-white" href="#">Another action</a></li>
+                    <li><a class="dropdown-item text-white" href="#">Something else here</a></li>
+                </ul>
+            </li>
+        </ul>
+        <div class="d-flex justify-content-end align-items-center gap-2">
+            <button type="button" class="btn btn-sm btn-light position-relative">
+                <i class="fa-solid fa-user"></i>
+                <span
+                    class="position-absolute top-0 start-100 translate-middle p-2 bg-danger border border-light rounded-circle">
+                    <span class="visually-hidden">New alerts</span>
+                </span>
+            </button>
+            <button type="button" class="btn btn-sm btn-light position-relative">
+                <i class="fa-solid fa-bell"></i>
+                <span
+                    class="position-absolute top-0 start-100 translate-middle p-2 bg-danger border border-light rounded-circle">
+                    <span class="visually-hidden">New alerts</span>
+                </span>
+            </button>
+            <button type="button" class="btn btn-sm btn-light position-relative">
+                <i class="fa-solid fa-message"></i>
+            </button>
+            <button type="button" class="btn btn-sm btn-light position-relative">
+                <i class="fa-solid fa-gear"></i>
+            </button>
+        </div>
+
+    </div>
+</nav>
+
+<div class="container-fluid py-4 bg-light">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <h4 class="mb-4 text-dark">Project Application Form</h4>
+                    
+                    <!-- Form Sections -->
+                    <div class="row g-4">
+                        <!-- ACTIVITY NAME & LOCATION DETAILS -->
+                        <div class="col-12">
+                            <div class="border rounded p-3 bg-light">
+                                <h6 class="fw-bold text-uppercase mb-3 text-dark">ACTIVITY NAME & LOCATION DETAILS</h6>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Project Name</label>
+                                        <select class="form-select" [(ngModel)]="formData.selectedProjectName" 
+                                                name="selectedProjectName" (change)="onProjectNameChange()">
+                                            <option value="">Select Project Name</option>
+                                            <option *ngFor="let project of projectNames" [value]="project">
+                                                {{ project }}
+                                            </option>
+                                        </select>
+                                        <div *ngIf="formData.selectedProjectName === 'MISC. (Create new)'" class="mt-2">
+                                            <input type="text" class="form-control" [(ngModel)]="formData.newProjectName" 
+                                                   name="newProjectName" placeholder="Enter new project name">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Name of Activity / Scheme</label>
+                                        <input type="text" class="form-control" [(ngModel)]="formData.activityName" 
+                                               name="activityName" placeholder="Enter activity/scheme name">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Scheme Type</label>
+                                        <select class="form-select" [(ngModel)]="formData.selectedSchemeType" 
+                                                name="selectedSchemeType" (change)="onSchemeTypeChange()">
+                                            <option value="">Select Scheme Type</option>
+                                            <option *ngFor="let scheme of schemeTypes" [value]="scheme">
+                                                {{ scheme }}
+                                            </option>
+                                        </select>
+                                        <div *ngIf="formData.selectedSchemeType === 'Misc. (Create new)'" class="mt-2">
+                                            <input type="text" class="form-control" [(ngModel)]="formData.newSchemeType" 
+                                                   name="newSchemeType" placeholder="Enter new scheme type">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Mouza / Village / Location Name</label>
+                                        <input type="text" class="form-control" [(ngModel)]="formData.locationName" 
+                                               name="locationName" placeholder="Enter location name">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Latitude</label>
+                                        <input type="number" class="form-control" [(ngModel)]="formData.latitude" 
+                                               name="latitude" step="any" placeholder="Enter latitude">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Longitude</label>
+                                        <input type="number" class="form-control" [(ngModel)]="formData.longitude" 
+                                               name="longitude" step="any" placeholder="Enter longitude">
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label fw-semibold">AOI Upload (.kml)</label>
+                                        <div class="custom-file-upload">
+                                            <input type="file" class="file-input-hidden" (change)="onAoiFileChange($event)" 
+                                                   accept=".kml" multiple #aoiInput>
+                                            <div class="file-upload-area" (click)="aoiInput.click()">
+                                                <img src="assets/images/fileupload.jpg" alt="Upload files" class="upload-image" />
+                                                <span class="upload-text">Click to upload files</span>
+                                            </div>
+                                        </div>
+                                        <small class="text-muted">Upload Area of Interest file in KML format</small>
+                                        <div *ngIf="aoiFiles.length > 0" class="mt-3">
+                                            <h6 class="small fw-semibold mb-2">Uploaded Files:</h6>
+                                            <div class="d-flex flex-wrap gap-2">
+                                                <div class="file-preview-item" *ngFor="let aoiFile of aoiFiles">
+                                                    <div class="file-preview-card">
+                                                        <div class="file-icon-container">
+                                                            <img src="assets/images/document.jpg" alt="Document" class="document-icon" />
+                                                        </div>
+                                                        <button type="button" class="btn-remove" 
+                                                                (click)="removeAoiFile(aoiFile)"
+                                                                title="Remove file">
+                                                            <i class="fa-solid fa-times"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- BENEFICIERIES DETAILS -->
+                        <div class="col-12">
+                            <div class="border rounded p-3 bg-light">
+                                <h6 class="fw-bold text-uppercase mb-3 text-dark">BENEFICIERIES DETAILS</h6>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Name of Beneficiary / Beneficiaries</label>
+                                        <input type="text" class="form-control" [(ngModel)]="formData.beneficiaryName" 
+                                               name="beneficiaryName" placeholder="Enter beneficiary name(s)">
+                                    </div>
+                                   
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-semibold">Estimated Cost</label>
+                                        <input type="number" class="form-control" [(ngModel)]="formData.estimatedCost" 
+                                               name="estimatedCost" step="0.01" placeholder="Enter estimated cost">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-semibold">Final Cost</label>
+                                        <input type="number" class="form-control" [(ngModel)]="formData.finalCost" 
+                                               name="finalCost" step="0.01" placeholder="Enter final cost">
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label class="form-label fw-semibold">Beneficiaries Details</label>
+                                        <textarea class="form-control" [(ngModel)]="formData.beneficiaryDetails" 
+                                                  name="beneficiaryDetails" rows="3" 
+                                                  placeholder="Enter beneficiary details"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- DOCUMENTATION -->
+                        <div class="col-12">
+                            <div class="border rounded p-3 bg-light">
+                                <h6 class="fw-bold text-uppercase mb-3 text-dark">DOCUMENTATION</h6>
+                                <div class="row g-3">
+                                    <div class="col-12">
+                                        <label class="form-label fw-semibold">Fund Type</label>
+                                        <input type="text" class="form-control" [(ngModel)]="formData.fundType" 
+                                               name="fundType" placeholder="Enter fund type">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Beneficiaries Documents</label>
+                                        <div class="custom-file-upload">
+                                            <input type="file" class="file-input-hidden" (change)="onBeneficiaryDocChange($event)" 
+                                                   accept="image/*,.pdf" multiple #beneficiaryDocInput>
+                                            <div class="file-upload-area" (click)="beneficiaryDocInput.click()">
+                                                <img src="assets/images/fileupload.jpg" alt="Upload files" class="upload-image" />
+                                                <span class="upload-text">Click to upload files</span>
+                                            </div>
+                                        </div>
+                                        <small class="text-muted">Upload photos, documents, etc.</small>
+                                        <!-- Beneficiary Documents Preview -->
+                                        <div *ngIf="beneficiaryDocuments.length > 0" class="mt-3">
+                                            <h6 class="small fw-semibold mb-2">Uploaded Files:</h6>
+                                            <div class="d-flex flex-wrap gap-2">
+                                                <div class="file-preview-item" *ngFor="let doc of beneficiaryDocuments">
+                                                    <div class="file-preview-card">
+                                                        <div *ngIf="doc.type === 'image' && doc.preview" class="image-preview">
+                                                            <img [src]="doc.preview" [alt]="doc.file.name" />
+                                                        </div>
+                                                        <div *ngIf="doc.type === 'image' && !doc.preview" class="image-preview">
+                                                            <img src="assets/images/imagedummy.jpg" alt="Image" />
+                                                        </div>
+                                                        <div *ngIf="doc.type !== 'image'" class="file-icon-container">
+                                                            <img src="assets/images/document.jpg" alt="Document" class="document-icon" />
+                                                        </div>
+                                                        <button type="button" class="btn-remove" 
+                                                                (click)="removeBeneficiaryDoc(doc)"
+                                                                title="Remove file">
+                                                            <i class="fa-solid fa-times"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Plan & Estimation</label>
+                                        <div class="custom-file-upload">
+                                            <input type="file" class="file-input-hidden" (change)="onPlanEstimationChange($event)" 
+                                                   accept=".pdf,.xlsx,.docx" multiple #planInput>
+                                            <div class="file-upload-area" (click)="planInput.click()">
+                                                <img src="assets/images/fileupload.jpg" alt="Upload files" class="upload-image" />
+                                                <span class="upload-text">Click to upload files</span>
+                                            </div>
+                                        </div>
+                                        <small class="text-muted">Upload plan and estimation files</small>
+                                        <!-- Plan & Estimation Preview -->
+                                        <div *ngIf="planEstimationFiles.length > 0" class="mt-3">
+                                            <h6 class="small fw-semibold mb-2">Uploaded Files:</h6>
+                                            <div class="d-flex flex-wrap gap-2">
+                                                <div class="file-preview-item" *ngFor="let file of planEstimationFiles">
+                                                    <div class="file-preview-card">
+                                                        <div class="file-icon-container">
+                                                            <img src="assets/images/document.jpg" alt="Document" class="document-icon" />
+                                                        </div>
+                                                        <button type="button" class="btn-remove" 
+                                                                (click)="removePlanEstimation(file)"
+                                                                title="Remove file">
+                                                            <i class="fa-solid fa-times"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Tender Details</label>
+                                        <div class="custom-file-upload">
+                                            <input type="file" class="file-input-hidden" (change)="onTenderDetailsChange($event)" 
+                                                   accept=".pdf,.xlsx,.docx" multiple #tenderInput>
+                                            <div class="file-upload-area" (click)="tenderInput.click()">
+                                                <img src="assets/images/fileupload.jpg" alt="Upload files" class="upload-image" />
+                                                <span class="upload-text">Click to upload files</span>
+                                            </div>
+                                        </div>
+                                        <small class="text-muted">Upload tender detail files</small>
+                                        <!-- Tender Details Preview -->
+                                        <div *ngIf="tenderDetailFiles.length > 0" class="mt-3">
+                                            <h6 class="small fw-semibold mb-2">Uploaded Files:</h6>
+                                            <div class="d-flex flex-wrap gap-2">
+                                                <div class="file-preview-item" *ngFor="let file of tenderDetailFiles">
+                                                    <div class="file-preview-card">
+                                                        <div class="file-icon-container">
+                                                            <img src="assets/images/document.jpg" alt="Document" class="document-icon" />
+                                                        </div>
+                                                        <button type="button" class="btn-remove" 
+                                                                (click)="removeTenderDetail(file)"
+                                                                title="Remove file">
+                                                            <i class="fa-solid fa-times"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Other Documents</label>
+                                        <div class="custom-file-upload">
+                                            <input type="file" class="file-input-hidden" (change)="onOtherDocChange($event)" 
+                                                   accept=".pdf,.xlsx,.docx,.jpg,.jpeg" multiple #otherDocInput>
+                                            <div class="file-upload-area" (click)="otherDocInput.click()">
+                                                <img src="assets/images/fileupload.jpg" alt="Upload files" class="upload-image" />
+                                                <span class="upload-text">Click to upload files</span>
+                                            </div>
+                                        </div>
+                                        <small class="text-muted">Accepted formats: .pdf, .xlsx, .docx, .jpg/.jpeg</small>
+                                        <!-- Other Documents Preview -->
+                                        <div *ngIf="otherDocuments.length > 0" class="mt-3">
+                                            <h6 class="small fw-semibold mb-2">Uploaded Files:</h6>
+                                            <div class="d-flex flex-wrap gap-2">
+                                                <div class="file-preview-item" *ngFor="let doc of otherDocuments">
+                                                    <div class="file-preview-card">
+                                                        <div *ngIf="doc.type === 'image' && doc.preview" class="image-preview">
+                                                            <img [src]="doc.preview" [alt]="doc.file.name" />
+                                                        </div>
+                                                        <div *ngIf="doc.type === 'image' && !doc.preview" class="image-preview">
+                                                            <img src="assets/images/imagedummy.jpg" alt="Image" />
+                                                        </div>
+                                                        <div *ngIf="doc.type !== 'image'" class="file-icon-container">
+                                                            <img src="assets/images/document.jpg" alt="Document" class="document-icon" />
+                                                        </div>
+                                                        <button type="button" class="btn-remove" 
+                                                                (click)="removeOtherDoc(doc)"
+                                                                title="Remove file">
+                                                            <i class="fa-solid fa-times"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- PHOTO & VIDEOGRAPHY -->
+                        <div class="col-12">
+                            <div class="border rounded p-3 bg-light">
+                                <h6 class="fw-bold text-uppercase mb-3 text-dark">PHOTO & VIDEOGRAPHY</h6>
+                                <div class="row g-3">
+                                    <div class="col-12">
+                                        <label class="form-label fw-semibold">Activity Photography & Videography Documentation</label>
+                                        <div class="custom-file-upload">
+                                            <input type="file" class="file-input-hidden" (change)="onMediaChange($event)" 
+                                                   accept="image/*,video/*" multiple #mediaInput>
+                                            <div class="file-upload-area" (click)="mediaInput.click()">
+                                                <img src="assets/images/fileupload.jpg" alt="Upload files" class="upload-image" />
+                                                <span class="upload-text">Click to upload files</span>
+                                            </div>
+                                        </div>
+                                        <small class="text-muted">Upload photos and videos of the activity</small>
+                                        <!-- Media Preview -->
+                                        <div *ngIf="uploadedMedia.length > 0" class="mt-3">
+                                            <h6 class="small fw-semibold mb-2">Uploaded Media:</h6>
+                                            <div class="d-flex flex-wrap gap-2">
+                                                <div class="file-preview-item" *ngFor="let media of uploadedMedia">
+                                                    <div class="file-preview-card">
+                                                        <div *ngIf="media.type === 'image' && media.preview" class="image-preview">
+                                                            <img [src]="media.preview" [alt]="media.file.name" />
+                                                        </div>
+                                                        <div *ngIf="media.type === 'image' && !media.preview" class="image-preview">
+                                                            <img src="assets/images/imagedummy.jpg" alt="Image" />
+                                                        </div>
+                                                        <div *ngIf="media.type === 'video'" class="video-preview">
+                                                            <i class="fa-solid fa-video file-icon"></i>
+                                                        </div>
+                                                        <div *ngIf="media.type === 'document'" class="file-icon-container">
+                                                            <img src="assets/images/document.jpg" alt="Document" class="document-icon" />
+                                                        </div>
+                                                        <button type="button" class="btn-remove" 
+                                                                (click)="removeMedia(media)"
+                                                                title="Remove file">
+                                                            <i class="fa-solid fa-times"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Application Confirmation Note -->
+                        <div class="col-12">
+                            <div class="alert alert-info border-0">
+                                <strong>Note:</strong> Application confirmation & verification will be done by the authority
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="col-12">
+                            <div class="d-flex justify-content-end gap-2">
+                                <button type="button" class="btn btn-secondary" (click)="resetForm()">
+                                    <i class="fa-solid fa-rotate me-1"></i>Reset
+                                </button>
+                                <button type="button" class="btn btn-primary" (click)="submitForm()">
+                                    <i class="fa-solid fa-paper-plane me-1"></i>Submit Application
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
