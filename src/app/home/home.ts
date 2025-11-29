@@ -4,6 +4,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MapComponent } from '../map/map';
 import { MapSelectionService } from '../map-selection.service';
+import { AuthService, IDefaultUser } from '../services/auth/auth';
+import { Router } from '@angular/router';
 
 type ProjectDocument = {
   label: string;
@@ -32,27 +34,30 @@ type Project = {
   styleUrl: './home.scss',
 })
 
- 
+
 export class Home implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild(MapComponent) mapComponent!: MapComponent;
-  
+
   districts = signal<string[]>([]);
   mouzas = signal<string[]>([]);
   selectedDistrict: string = '';
   selectedMouza: string = '';
-  
+
   // Map layer properties
-  availableLayers = signal<Array<{name: string, label: string, icon: string}>>([]);
+  availableLayers = signal<Array<{ name: string, label: string, icon: string }>>([]);
   currentLayerName = signal<string>('Satellite');
 
   private districtData: any;
   private mouzaData: any;
+  private userProfile = signal<IDefaultUser | null>(null);
 
   constructor(
     @Inject(PLATFORM_ID) private platformId: Object,
     private mapSelectionService: MapSelectionService,
-    private cdr: ChangeDetectorRef
-  ) {}
+    private authService: AuthService,
+    private cdr: ChangeDetectorRef,
+    private router: Router
+  ) { }
 
   async ngOnInit(): Promise<void> {
     if (isPlatformBrowser(this.platformId)) {
@@ -88,13 +93,13 @@ export class Home implements OnInit, OnDestroy, AfterViewInit {
 
   switchLayer(layerName: string): void {
     console.log('switchLayer called with:', layerName);
-    
+
     // Update current layer name in home component
     this.currentLayerName.set(layerName);
-    
+
     // Notify map component via service
     this.mapSelectionService.selectLayer(layerName);
-    
+
     // Also try direct method call as fallback
     if (this.mapComponent) {
       try {
@@ -103,7 +108,7 @@ export class Home implements OnInit, OnDestroy, AfterViewInit {
         console.error('Error calling mapComponent.switchLayer directly:', error);
       }
     }
-    
+
     this.cdr.detectChanges();
   }
 
@@ -127,60 +132,133 @@ export class Home implements OnInit, OnDestroy, AfterViewInit {
 
   private async loadData(): Promise<void> {
     try {
-      // Load district script
-      await this.loadScript('/assets/data/ArunachalPradeshDistricts_2.js');
-      
-      // Load mouza script
-      await this.loadScript('/assets/data/ArunachalPradeshMouza_1.js');
-      
-      // Access the global variables
-      this.districtData = (window as any).json_ArunachalPradeshDistricts_2;
-      this.mouzaData = (window as any).json_ArunachalPradeshMouza_1;
-      
-      if (this.districtData && this.districtData.features) {
-        // Extract district names
-        const districtNames = this.districtData.features
-          .map((f: any) => f.properties["District N"] || f.properties.district)
-          .filter((name: string) => name)
-          .sort();
-        
-        // Update signal - this will automatically trigger change detection
-        this.districts.set(districtNames);
-        console.log('Districts loaded:', districtNames.length);
+      if (this.userProfile()?.role === 'state_manager') {
+        // Load district script
+        await this.loadScript('/assets/data/ArunachalPradeshDistricts_2.js');
+
+        // Load mouza script
+        await this.loadScript('/assets/data/ArunachalPradeshMouza_1.js');
+
+        // Access the global variables
+        this.districtData = (window as any).json_ArunachalPradeshDistricts_2;
+        this.mouzaData = (window as any).json_ArunachalPradeshMouza_1;
+
+        if (this.districtData && this.districtData.features) {
+          // Extract district names
+          const districtNames = this.districtData.features
+            .map((f: any) => f.properties["District N"] || f.properties.district)
+            .filter((name: string) => name)
+            .sort();
+
+          // Update signal - this will automatically trigger change detection
+          this.districts.set(districtNames);
+          console.log('Districts loaded:', districtNames.length);
+        }
+      }
+      else {
+        // Load district script
+        await this.loadScript('/assets/data/ArunachalPradeshDistricts_2_copy.js');
+
+        // Load mouza script
+        await this.loadScript('/assets/data/ArunachalPradeshMouza_1_copy.js');
+
+        // Access the global variables
+        this.districtData = (window as any).json_ArunachalPradeshDistricts_2_copy;
+        this.mouzaData = (window as any).json_ArunachalPradeshMouza_1_copy;
+
+        if (this.districtData && this.districtData.features) {
+          // Extract district names
+          const districtNames = this.districtData.features
+            .map((f: any) => f.properties["District N"] || f.properties.district)
+            .filter((name: string) => name)
+            .sort();
+
+          // Update signal - this will automatically trigger change detection
+          this.districts.set(districtNames);
+          console.log('Districts loaded:', districtNames.length);
+        }
       }
 
       // Mouzas will be filtered based on selected district
-      this.updateMouzas();
+      this.getUserProfile();
+      // this.updateMouzas();
+
     } catch (error) {
       console.error('Error loading data:', error);
     }
   }
 
+  private getUserProfile(bindOnlyMouza: boolean = false) {
+
+    const user = this.authService.getCurrentLoginUser();
+    console.log('User profile:', user);
+    if (user) {
+      this.userProfile.set(user);
+      if (user.role === 'district_manager') {
+        this.selectedDistrict = user.districts[0];
+        this.onDistrictChange();
+      } else if (user.role === 'block_manager') {
+        this.selectedDistrict = user.districts[0];
+        this.selectedMouza = user.blocks[0];
+        this.mapSelectionService.selectMouza(this.selectedMouza);
+        this.onDistrictChange(true);
+      }
+    }
+  }
+
   private loadScript(src: string): Promise<void> {
     return new Promise((resolve, reject) => {
+
       // Check if script is already loaded
       const existingScript = document.querySelector(`script[src="${src}"]`);
-      if (existingScript) {
-        // Script already loaded, check if data is available
-        if (src.includes('Districts') && (window as any).json_ArunachalPradeshDistricts_2) {
-          resolve();
-          return;
-        }
-        if (src.includes('Mouza') && (window as any).json_ArunachalPradeshMouza_1) {
-          resolve();
-          return;
-        }
-        // Script tag exists but data not ready, wait a bit
-        setTimeout(() => {
-          if ((src.includes('Districts') && (window as any).json_ArunachalPradeshDistricts_2) ||
-              (src.includes('Mouza') && (window as any).json_ArunachalPradeshMouza_1)) {
+      //---------------[Load Script for State Manager]----------------------//
+      //---------------[Load Script for Dristict/Block Manager]----------------------//
+      if (this.userProfile()?.role === 'state_manager') {
+        if (existingScript) {
+          // Script already loaded, check if data is available
+          if (src.includes('Districts') && (window as any).json_ArunachalPradeshDistricts_2) {
             resolve();
-          } else {
-            reject(new Error(`Script loaded but data not available: ${src}`));
+            return;
           }
-        }, 100);
-        return;
+          if (src.includes('Mouza') && (window as any).json_ArunachalPradeshMouza_1) {
+            resolve();
+            return;
+          }
+          // Script tag exists but data not ready, wait a bit
+          setTimeout(() => {
+            if ((src.includes('Districts') && (window as any).json_ArunachalPradeshDistricts_2) ||
+              (src.includes('Mouza') && (window as any).json_ArunachalPradeshMouza_1)) {
+              resolve();
+            } else {
+              reject(new Error(`Script loaded but data not available: ${src}`));
+            }
+          }, 100);
+          return;
+        }
+      } else if (this.userProfile()?.role === 'district_manager' || this.userProfile()?.role === 'block_manager') {
+        if (existingScript) {
+          // Script already loaded, check if data is available
+          if (src.includes('Districts') && (window as any).json_ArunachalPradeshDistricts_2_copy) {
+            resolve();
+            return;
+          }
+          if (src.includes('Mouza') && (window as any).json_ArunachalPradeshMouza_1_copy) {
+            resolve();
+            return;
+          }
+          // Script tag exists but data not ready, wait a bit
+          setTimeout(() => {
+            if ((src.includes('Districts') && (window as any).json_ArunachalPradeshDistricts_2_copy) ||
+              (src.includes('Mouza') && (window as any).json_ArunachalPradeshMouza_1_copy)) {
+              resolve();
+            } else {
+              reject(new Error(`Script loaded but data not available: ${src}`));
+            }
+          }, 100);
+          return;
+        }
       }
+
 
       const script = document.createElement('script');
       script.src = src;
@@ -193,13 +271,15 @@ export class Home implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
-  onDistrictChange(): void {
+  onDistrictChange(bindOnlyMouza: boolean = false): void {
     if (this.selectedDistrict) {
       this.mapSelectionService.selectDistrict(this.selectedDistrict);
       this.updateMouzas();
       // Clear mouza selection when district changes
-      this.selectedMouza = '';
-      this.mapSelectionService.selectMouza(null);
+      if (!bindOnlyMouza) {
+        this.selectedMouza = '';
+        this.mapSelectionService.selectMouza(null);
+      }
     } else {
       this.mapSelectionService.selectDistrict(null);
       this.mouzas.set([]);
@@ -232,7 +312,7 @@ export class Home implements OnInit, OnDestroy, AfterViewInit {
 
     // Filter mouzas that are in the selected district
     const filteredMouzas: string[] = [];
-    
+
     this.mouzaData.features.forEach((f: any) => {
       try {
         const mouzaCentroid = this.getFeatureCentroid(f);
@@ -250,6 +330,7 @@ export class Home implements OnInit, OnDestroy, AfterViewInit {
     // Update signal - this will automatically trigger change detection
     this.mouzas.set(filteredMouzas.sort());
     console.log('Mouzas loaded for', this.selectedDistrict, ':', filteredMouzas.length);
+    // this.getUserProfile();
   }
 
   private getFeatureCentroid(feature: any): any {
@@ -286,7 +367,7 @@ export class Home implements OnInit, OnDestroy, AfterViewInit {
     const lat = point.lat;
     const lng = point.lng;
     const coordinates = polygonFeature.geometry.coordinates;
-    
+
     if (polygonFeature.geometry.type === 'MultiPolygon') {
       for (const polygon of coordinates) {
         if (this.isPointInPolygonRing(point, polygon[0], lat, lng)) {
@@ -579,7 +660,7 @@ export class Home implements OnInit, OnDestroy, AfterViewInit {
   }
 
   getTypeIcon(type: string | undefined): string {
-    switch(type) {
+    switch (type) {
       case 'mountain': return '🏔️';
       case 'valley': return '🌄';
       case 'city': return '🏙️';
@@ -589,7 +670,7 @@ export class Home implements OnInit, OnDestroy, AfterViewInit {
   }
 
   getTypeColor(type: string | undefined): string {
-    switch(type) {
+    switch (type) {
       case 'mountain': return '#8B4513'; // Brown
       case 'valley': return '#228B22'; // Forest Green
       case 'city': return '#1E90FF'; // Dodger Blue
@@ -599,7 +680,7 @@ export class Home implements OnInit, OnDestroy, AfterViewInit {
   }
 
   getTypeLabel(type: string | undefined): string {
-    switch(type) {
+    switch (type) {
       case 'mountain': return 'Mountain';
       case 'valley': return 'Valley';
       case 'city': return 'City';
@@ -689,5 +770,18 @@ export class Home implements OnInit, OnDestroy, AfterViewInit {
     }
 
     return null;
+  }
+
+
+  logout(): void {
+    this.authService.logout();
+    this.userProfile.set(null);
+    this.selectedDistrict = '';
+    this.selectedMouza = '';
+    this.mapSelectionService.selectDistrict(null);
+    this.mapSelectionService.selectMouza(null);
+    this.mouzas.set([]);
+    this.districts.set([]);
+    this.router.navigate(['/login']);
   }
 }

@@ -1,17 +1,18 @@
-import { Component, AfterViewInit, Inject, PLATFORM_ID, ChangeDetectorRef, OnDestroy, ViewEncapsulation, NgZone, ViewChild, ElementRef, ApplicationRef, signal, computed, effect } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
-import { CommonModule } from '@angular/common';
-import { MapSelectionService } from '../map-selection.service';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { AfterViewInit, ApplicationRef, ChangeDetectorRef, Component, computed, effect, ElementRef, Inject, NgZone, OnDestroy, PLATFORM_ID, signal, ViewChild, ViewEncapsulation } from '@angular/core';
 import { Subscription } from 'rxjs';
-import { AuthService, IDefaultUser } from '../services/auth/auth';
+import { MapSelectionService } from '../../map-selection.service';
+import { IDefaultUser, AuthService } from '../../services/auth/auth';
+
+
+
 
 @Component({
-  selector: 'app-map',
-  standalone: true,
+  selector: 'app-map-for-insert',
   imports: [CommonModule],
   encapsulation: ViewEncapsulation.None,
   template: `
-    <div id="map"></div>
+    <div id="mapInsert"></div>
     <!-- <div *ngIf="showInfoPanel" id="infoPanel" class="info-panel" style="position: fixed !important; bottom: 20px !important; right: 20px !important; width: 250px !important; background: white !important; border: 2px solid #0066cc !important; border-radius: 8px !important; padding: 15px !important; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important; z-index: 99999 !important;">
       <button (click)="hideInfoPanel()" style="position: absolute; top: 8px; right: 8px; background: #dc3545; color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer;">×</button>
       <h4 style="margin: 0 0 12px 0; color: #0066cc; font-size: 16px; border-bottom: 1px solid #ddd; padding-bottom: 8px; padding-right: 30px;">Selected Information</h4>
@@ -138,7 +139,7 @@ import { AuthService, IDefaultUser } from '../services/auth/auth';
     </div>
   `,
   styles: [`
-    #map {
+    #mapInsert {
       height: 77vh;
       width: 100%;
     }
@@ -507,7 +508,7 @@ import { AuthService, IDefaultUser } from '../services/auth/auth';
     }
   `]
 })
-export class MapComponent implements AfterViewInit, OnDestroy {
+export class MapForInsert implements AfterViewInit, OnDestroy {
 
   private map: any;
   private L: any;
@@ -616,22 +617,55 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
   async ngAfterViewInit(): Promise<void> {
     if (isPlatformBrowser(this.platformId)) {
-      await this.initMap();
-      this.subscribeToSelections();
+      // Wait for the map container to be available in the DOM
+      // This is important when the component is inside a conditional step
+      await this.waitForMapContainer();
 
-      // Ensure panel element exists in DOM (even if hidden)
-      setTimeout(() => {
-        const panelElement = document.querySelector('.location-details-panel');
-        const viewChildElement = this.panelElementRef?.nativeElement;
+      if (this.isMapContainerAvailable()) {
+        await this.initMap();
+        this.subscribeToSelections();
 
-        if (panelElement) {
-          (panelElement as HTMLElement).style.display = 'none';
-        }
-        if (viewChildElement) {
-          viewChildElement.style.display = 'none';
-        }
-      }, 100);
+        // Ensure panel element exists in DOM (even if hidden)
+        setTimeout(() => {
+          const panelElement = document.querySelector('.location-details-panel');
+          const viewChildElement = this.panelElementRef?.nativeElement;
+
+          if (panelElement) {
+            (panelElement as HTMLElement).style.display = 'none';
+          }
+          if (viewChildElement) {
+            viewChildElement.style.display = 'none';
+          }
+        }, 100);
+      }
     }
+  }
+
+  private async waitForMapContainer(maxWaitTime: number = 5000): Promise<void> {
+    return new Promise((resolve) => {
+      const startTime = Date.now();
+      const checkContainer = () => {
+        const container = document.getElementById('mapInsert');
+        if (container) {
+          resolve();
+        } else {
+          const elapsedTime = Date.now() - startTime;
+          if (elapsedTime < maxWaitTime) {
+            // Retry after a short delay
+            setTimeout(checkContainer, 100);
+          } else {
+            console.warn('Map container not found after maximum wait time');
+            resolve(); // Resolve anyway to prevent hanging
+          }
+        }
+      };
+      checkContainer();
+    });
+  }
+
+  private isMapContainerAvailable(): boolean {
+    const container = document.getElementById('mapInsert');
+    return container !== null;
   }
 
   ngOnDestroy(): void {
@@ -650,6 +684,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   private subscribeToSelections(): void {
     // Listen to district selection from home page
     const districtSub = this.mapSelectionService.selectedDistrict$.subscribe(districtName => {
+      console.log("GETTING DISTRICT NAME", districtName)
       if (districtName && this.districtLayerMap.has(districtName)) {
         const district = this.districtLayerMap.get(districtName);
         this.highlightDistrict(district.layer, districtName);
@@ -707,6 +742,35 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   }
 
   private async initMap(): Promise<void> {
+    // Check if map is already initialized
+    if (this.map && this.isMapReady) {
+      // Map already exists, just invalidate size in case it was hidden
+      setTimeout(() => {
+        if (this.map) {
+          this.map.invalidateSize();
+        }
+      }, 100);
+      return;
+    }
+
+    // Ensure container exists
+    const container = document.getElementById('mapInsert');
+    if (!container) {
+      console.error('Map container not found. Waiting for container...');
+      // Wait a bit and retry
+      await new Promise(resolve => setTimeout(resolve, 200));
+      const retryContainer = document.getElementById('mapInsert');
+      if (!retryContainer) {
+        console.error('Map container still not found after retry');
+        return;
+      }
+    }
+
+    // Check again if map was initialized while waiting
+    if (this.map && this.isMapReady) {
+      return;
+    }
+
     this.L = await import('leaflet');
 
     // Fix missing default marker icons using local assets
@@ -717,97 +781,129 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       shadowUrl: '/assets/images/marker-shadow.png',
     });
 
-    this.map = this.L.map('map', {
-      center: [28.2, 94.5], // Center of Arunachal Pradesh
-      zoom: 7,
-      zoomControl: true,
-      scrollWheelZoom: true,
-      doubleClickZoom: true,
-      boxZoom: true,
-      keyboard: true,
-      dragging: true
-    });
+    try {
+      this.map = this.L.map('mapInsert', {
+        center: [28.2, 94.5], // Center of Arunachal Pradesh
+        zoom: 7,
+        zoomControl: true,
+        scrollWheelZoom: true,
+        doubleClickZoom: true,
+        boxZoom: true,
+        keyboard: true,
+        dragging: true
+      });
 
-    // Define different map layers
-    this.baseLayers = {
-      "OpenStreetMap": this.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors',
-        maxZoom: 18,
-        minZoom: 4
-      }),
+      // Define different map layers
+      this.baseLayers = {
+        "OpenStreetMap": this.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; OpenStreetMap contributors',
+          maxZoom: 18,
+          minZoom: 4
+        }),
 
-      "Satellite": this.L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-        attribution: '&copy; Esri',
-        maxZoom: 18,
-        minZoom: 4
-      }),
+        "Satellite": this.L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+          attribution: '&copy; Esri',
+          maxZoom: 18,
+          minZoom: 4
+        }),
 
-      "Terrain": this.L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenTopoMap',
-        maxZoom: 17,
-        minZoom: 4
-      }),
+        "Terrain": this.L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; OpenTopoMap',
+          maxZoom: 17,
+          minZoom: 4
+        }),
 
-      "Google Streets": this.L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
-        attribution: '&copy; Google',
-        maxZoom: 20,
-        minZoom: 4
-      }),
+        "Google Streets": this.L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+          attribution: '&copy; Google',
+          maxZoom: 20,
+          minZoom: 4
+        }),
 
-      "Google Satellite": this.L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
-        attribution: '&copy; Google',
-        maxZoom: 20,
-        minZoom: 4
-      }),
+        "Google Satellite": this.L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+          attribution: '&copy; Google',
+          maxZoom: 20,
+          minZoom: 4
+        }),
 
-      "Google Hybrid": this.L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
-        attribution: '&copy; Google',
-        maxZoom: 20,
-        minZoom: 4
-      }),
+        "Google Hybrid": this.L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+          attribution: '&copy; Google',
+          maxZoom: 20,
+          minZoom: 4
+        }),
 
-      "CartoDB Light": this.L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; CartoDB',
-        maxZoom: 20,
-        minZoom: 4
-      }),
+        "CartoDB Light": this.L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+          attribution: '&copy; CartoDB',
+          maxZoom: 20,
+          minZoom: 4
+        }),
 
-      "CartoDB Dark": this.L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; CartoDB',
-        maxZoom: 20,
-        minZoom: 4
-      })
-    };
+        "CartoDB Dark": this.L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+          attribution: '&copy; CartoDB',
+          maxZoom: 20,
+          minZoom: 4
+        })
+      };
 
-    // Add the default layer
-    this.baseLayers["Satellite"].addTo(this.map);
-    this.currentLayer = this.baseLayers["Satellite"];
-    this.currentLayerName = 'Satellite';
+      // Add the default layer
+      this.baseLayers["Satellite"].addTo(this.map);
+      this.currentLayer = this.baseLayers["Satellite"];
+      this.currentLayerName = 'Satellite';
 
-    // Note: Layer control is commented out since we're using custom buttons
-    // If you want to use Leaflet's built-in layer control, uncomment this line
-    // this.L.control.layers(this.baseLayers).addTo(this.map);
+      // Note: Layer control is commented out since we're using custom buttons
+      // If you want to use Leaflet's built-in layer control, uncomment this line
+      // this.L.control.layers(this.baseLayers).addTo(this.map);
 
-    // Add scale control
-    this.L.control.scale().addTo(this.map);
+      // Add scale control
+      this.L.control.scale().addTo(this.map);
 
-    // Add My Location button
-    this.addMyLocationControl();
+      // Add My Location button
+      this.addMyLocationControl();
 
-    // Ensure map resizes properly
-    setTimeout(() => {
-      this.map.invalidateSize();
-    }, 100);
+      // Ensure map resizes properly
+      setTimeout(() => {
+        if (this.map) {
+          this.map.invalidateSize();
+        }
+      }, 100);
 
-    // Mark map as ready
-    this.isMapReady = true;
+      // Mark map as ready
+      this.isMapReady = true;
 
-    // For demo purposes, create sample district data
-    // In production, you would load this from a GeoJSON file
-    this.initDistrictData();
+      // For demo purposes, create sample district data
+      // In production, you would load this from a GeoJSON file
+      this.initDistrictData();
 
-    // Add location markers
-    this.addLocationMarkers();
+      // Add location markers
+      this.addLocationMarkers();
+    } catch (error) {
+      console.error('Error initializing map:', error);
+      this.isMapReady = false;
+      // Don't throw, just log the error so the component can continue
+    }
+  }
+
+  // Public method to initialize map when step becomes active
+  public async ensureMapInitialized(): Promise<void> {
+    if (!this.isMapReady || !this.map) {
+      await this.waitForMapContainer();
+      if (this.isMapContainerAvailable()) {
+        try {
+          await this.initMap();
+          if (!this.subscriptions || this.subscriptions.length === 0) {
+            this.subscribeToSelections();
+          }
+        } catch (error) {
+          console.error('Error ensuring map initialization:', error);
+        }
+      }
+    } else if (this.map) {
+      // Map is already initialized, just invalidate size in case container was hidden
+      setTimeout(() => {
+        if (this.map) {
+          this.map.invalidateSize();
+        }
+      }, 100);
+    }
   }
 
   switchLayer(layerName: string): void {
@@ -1022,6 +1118,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   }
 
   private setupDistrictLayer(): void {
+    console.log("SETTING UP DISTRICT LAYER", this.districtData)
     if (!this.districtData || !this.districtData.features) return;
 
     const districtMap = new Map<string, any>();
@@ -1031,7 +1128,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       onEachFeature: (feature: any, layer: any) => {
         const name = feature.properties["District N"] || feature.properties.district;
         districtMap.set(name, layer);
-
+        this.highlightDistrict(layer, name);
         layer.on('click', () => {
           this.ngZone.run(() => {
             this.highlightDistrict(layer, name);
@@ -1066,6 +1163,9 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   }
 
   highlightDistrict(layer: any, districtName: string, mouzaToSelect?: string | null): void {
+    console.log("HIGHLIGHT DISTRICT", districtName, this.isHighlighting)
+    console.log("LAYER", layer)
+    console.log("SELECTED DISTRICT", this.selectedDistrict)
     // Prevent recursive calls
     if (this.isHighlighting && this.selectedDistrict === districtName) {
       return;
@@ -1083,10 +1183,10 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     }
 
     // Clear previously selected mouza when district is clicked
-    this.clearMouzaHighlight();
-    this.selectedMouza = null;
+    // this.clearMouzaHighlight();
+    // this.selectedMouza = null;
     // Also clear selection in service
-    this.mapSelectionService.selectMouza(null);
+    // this.mapSelectionService.selectMouza(null);
 
     // Highlight the selected district
     layer.setStyle({
@@ -1167,8 +1267,8 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   }
 
   private loadMouzasForDistrict(districtName: string, districtLayer: any, mouzaToSelect?: string | null): void {
-   
-   console.log(" LOAD MOUZAS FOR DISTRICT", districtName)
+
+    console.log("LOAD MOUZAS FOR DISTRICT", districtName)
     if (!this.mouzaData || !this.mouzaData.features) return;
 
     // Clear previous mouzas
@@ -1212,6 +1312,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       style: { color: '#9A1FFF', weight: 1, fillOpacity: 0 },
       onEachFeature: (feature: any, layer: any) => {
         const mouzaName = feature.properties["Mouza Name"] || feature.properties.subdistrict;
+        this.highlightMouza(feature, layer);
         layer.on('click', () => {
           this.ngZone.run(() => {
             this.selectedMouza = mouzaName;
@@ -1468,78 +1569,78 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   }
 
   // Location markers data
-  private arunachalTop10Locations = [
-    {
-      name: "Tawang",
-      latitude: 27.5860,
-      longitude: 91.8650,
-      type: "mountain",
-      description: "Famous for Tawang Monastery, scenic mountains, and snow-clad peaks. Located near the Indo-China border."
-    },
-    {
-      name: "Ziro Valley",
-      latitude: 27.5565,
-      longitude: 93.8196,
-      type: "valley",
-      description: "Known for its pine hills, rice fields, and the Apatani tribal culture. Hosts the popular Ziro Music Festival."
-    },
-    {
-      name: "Bomdila",
-      latitude: 27.2648,
-      longitude: 92.4241,
-      type: "mountain",
-      description: "A hill town with apple orchards, Buddhist monasteries, and panoramic views of the Himalayas."
-    },
-    {
-      name: "Itanagar",
-      latitude: 27.0844,
-      longitude: 93.6053,
-      type: "city",
-      description: "The capital city, featuring Ita Fort, Ganga Lake, and a blend of modern and tribal culture."
-    },
-    {
-      name: "Dirang",
-      latitude: 27.3645,
-      longitude: 92.2402,
-      type: "valley",
-      description: "A serene valley between Bomdila and Tawang, famous for hot water springs and apple orchards."
-    },
-    {
-      name: "Pasighat",
-      latitude: 28.0660,
-      longitude: 95.3263,
-      type: "city",
-      description: "The oldest town in Arunachal Pradesh, located along the Siang River; gateway to the eastern Himalayas."
-    },
-    {
-      name: "Roing",
-      latitude: 28.1550,
-      longitude: 95.8350,
-      type: "valley",
-      description: "A picturesque valley town with lakes, rivers, and the Mayudia Pass offering snowfall in winter."
-    },
-    {
-      name: "Anini",
-      latitude: 28.8137,
-      longitude: 95.8850,
-      type: "mountain",
-      description: "Remote and peaceful, surrounded by lush green hills; home to the Idu Mishmi tribe."
-    },
-    {
-      name: "Along (Aalo)",
-      latitude: 28.1670,
-      longitude: 94.8030,
-      type: "valley",
-      description: "Known for hanging bridges made of bamboo over the Siang River and Adi tribal villages."
-    },
-    {
-      name: "Namdapha National Park",
-      latitude: 27.4917,
-      longitude: 96.3858,
-      type: "national_park",
-      description: "A biodiversity hotspot and India's third-largest national park, home to tigers, leopards, and red pandas."
-    }
-  ];
+  // private arunachalTop10Locations = [
+  //   {
+  //     name: "Tawang",
+  //     latitude: 27.5860,
+  //     longitude: 91.8650,
+  //     type: "mountain",
+  //     description: "Famous for Tawang Monastery, scenic mountains, and snow-clad peaks. Located near the Indo-China border."
+  //   },
+  //   {
+  //     name: "Ziro Valley",
+  //     latitude: 27.5565,
+  //     longitude: 93.8196,
+  //     type: "valley",
+  //     description: "Known for its pine hills, rice fields, and the Apatani tribal culture. Hosts the popular Ziro Music Festival."
+  //   },
+  //   {
+  //     name: "Bomdila",
+  //     latitude: 27.2648,
+  //     longitude: 92.4241,
+  //     type: "mountain",
+  //     description: "A hill town with apple orchards, Buddhist monasteries, and panoramic views of the Himalayas."
+  //   },
+  //   {
+  //     name: "Itanagar",
+  //     latitude: 27.0844,
+  //     longitude: 93.6053,
+  //     type: "city",
+  //     description: "The capital city, featuring Ita Fort, Ganga Lake, and a blend of modern and tribal culture."
+  //   },
+  //   {
+  //     name: "Dirang",
+  //     latitude: 27.3645,
+  //     longitude: 92.2402,
+  //     type: "valley",
+  //     description: "A serene valley between Bomdila and Tawang, famous for hot water springs and apple orchards."
+  //   },
+  //   {
+  //     name: "Pasighat",
+  //     latitude: 28.0660,
+  //     longitude: 95.3263,
+  //     type: "city",
+  //     description: "The oldest town in Arunachal Pradesh, located along the Siang River; gateway to the eastern Himalayas."
+  //   },
+  //   {
+  //     name: "Roing",
+  //     latitude: 28.1550,
+  //     longitude: 95.8350,
+  //     type: "valley",
+  //     description: "A picturesque valley town with lakes, rivers, and the Mayudia Pass offering snowfall in winter."
+  //   },
+  //   {
+  //     name: "Anini",
+  //     latitude: 28.8137,
+  //     longitude: 95.8850,
+  //     type: "mountain",
+  //     description: "Remote and peaceful, surrounded by lush green hills; home to the Idu Mishmi tribe."
+  //   },
+  //   {
+  //     name: "Along (Aalo)",
+  //     latitude: 28.1670,
+  //     longitude: 94.8030,
+  //     type: "valley",
+  //     description: "Known for hanging bridges made of bamboo over the Siang River and Adi tribal villages."
+  //   },
+  //   {
+  //     name: "Namdapha National Park",
+  //     latitude: 27.4917,
+  //     longitude: 96.3858,
+  //     type: "national_park",
+  //     description: "A biodiversity hotspot and India's third-largest national park, home to tigers, leopards, and red pandas."
+  //   }
+  // ];
 
   private getMarkerIconByType(type: string): any {
     let backgroundColor = '#ff6b35';
@@ -1595,42 +1696,42 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       return;
     }
 
-    this.arunachalTop10Locations.forEach(location => {
-      // Create a custom icon based on location type
-      const locationIcon = this.getMarkerIconByType(location.type || 'default');
+    // this.arunachalTop10Locations.forEach(location => {
+    //   // Create a custom icon based on location type
+    //   const locationIcon = this.getMarkerIconByType(location.type || 'default');
 
-      const marker = this.L.marker([location.latitude, location.longitude], {
-        icon: locationIcon,
-        interactive: true,
-        bubblingMouseEvents: false
-      }).addTo(this.map);
+    //   const marker = this.L.marker([location.latitude, location.longitude], {
+    //     icon: locationIcon,
+    //     interactive: true,
+    //     bubblingMouseEvents: false
+    //   }).addTo(this.map);
 
-      // Make marker clickable and add click event
-      marker.on('click', (e: any) => {
-        // Stop event propagation to prevent map click and other layer interactions
-        this.L.DomEvent.stop(e);
+    //   // Make marker clickable and add click event
+    //   marker.on('click', (e: any) => {
+    //     // Stop event propagation to prevent map click and other layer interactions
+    //     this.L.DomEvent.stop(e);
 
-        this.ngZone.run(() => {
-          this.showLocationDetailsPanel(location, marker);
-        });
-      });
+    //     this.ngZone.run(() => {
+    //       this.showLocationDetailsPanel(location, marker);
+    //     });
+    //   });
 
-      // Also add mouseover for visual feedback
-      marker.on('mouseover', () => {
-        if (marker !== this.selectedMarker) {
-          marker.setOpacity(0.8);
-        }
-      });
+    //   // Also add mouseover for visual feedback
+    //   marker.on('mouseover', () => {
+    //     if (marker !== this.selectedMarker) {
+    //       marker.setOpacity(0.8);
+    //     }
+    //   });
 
-      marker.on('mouseout', () => {
-        if (marker !== this.selectedMarker) {
-          marker.setOpacity(1);
-        }
-      });
+    //   marker.on('mouseout', () => {
+    //     if (marker !== this.selectedMarker) {
+    //       marker.setOpacity(1);
+    //     }
+    //   });
 
-      this.locationMarkers.push(marker);
-      this.locationMarkerMap.set(location.name, marker);
-    });
+    //   this.locationMarkers.push(marker);
+    //   this.locationMarkerMap.set(location.name, marker);
+    // });
   }
 
   showLocationDetailsPanel(location: any, marker: any): void {

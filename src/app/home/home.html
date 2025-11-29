@@ -44,7 +44,7 @@
             <button type="button" class="btn btn-sm btn-light position-relative">
                 <i class="fa-solid fa-message"></i>
             </button>
-            <button type="button" class="btn btn-sm btn-light position-relative">
+            <button type="button" class="btn btn-sm btn-light position-relative" (click)="logout()">
                 <i class="fa-solid fa-gear"></i>
             </button>
         </div>
@@ -111,12 +111,12 @@
                     [(ngModel)]="selectedMouza" 
                     (ngModelChange)="onMouzaChange()"
                     [disabled]="!selectedDistrict || mouzas().length === 0"
-                    aria-label="Select Mouza"
+                    aria-label="Select Block"
                     style="border: 1px solid #e3e3e3 !important;
             font-size: 16px;
             margin: 4px 1px;"
                     >
-                <option value="">Select Mouza</option>
+                <option value="">Select Block</option>
                 <option *ngFor="let mouza of mouzas()" [value]="mouza">{{ mouza }}</option>
             </select>
         </div>
