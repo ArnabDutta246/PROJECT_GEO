@@ -1,1 +1,139 @@
 /* You can add global styles to this file, and also import other style files */
+
+// Import theme files using modern @use syntax (must come before @import)
+@use 'styles/theme-variables' as *;
+@use 'styles/light-theme' as *;
+@use 'styles/dark-theme' as *;
+
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&display=swap');
+
+// Apply theme variables globally
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  font-family: "Orbitron", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
+  letter-spacing: 1px;
+
+  // Use theme variables
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+// Utility classes for theme-aware components
+.bg-primary {
+  background-color: var(--bg-primary) !important;
+}
+
+.bg-secondary {
+  background-color: var(--bg-secondary) !important;
+}
+
+.bg-tertiary {
+  background-color: var(--bg-tertiary) !important;
+}
+
+.text-primary {
+  color: var(--text-primary) !important;
+}
+
+.text-secondary {
+  color: var(--text-secondary) !important;
+}
+
+.text-muted {
+  color: var(--text-muted) !important;
+}
+
+.border-theme {
+  border-color: var(--border-color) !important;
+}
+
+.card-theme {
+  background-color: var(--card-bg);
+  border-color: var(--card-border);
+}
+
+.input-theme {
+  background-color: var(--input-bg);
+  border-color: var(--input-border);
+  color: var(--text-primary);
+
+  &:focus {
+    border-color: var(--input-focus-border);
+    background-color: var(--input-bg);
+    color: var(--text-primary);
+  }
+}
+
+
+// header button styles
+.header-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.375rem;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1.1rem;
+
+  &:hover {
+    background-color: var(--bg-tertiary);
+    border-color: var(--border-color);
+    transform: scale(1.05);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  &:focus {
+    outline: 2px solid var(--input-focus-border);
+    outline-offset: 2px;
+  }
+}
+
+.theme-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+
+  i {
+    font-size: 1rem;
+  }
+
+  &.dark {
+    color: #ffd43b;
+
+    i {
+      animation: rotate 0.5s ease-in-out;
+    }
+  }
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+

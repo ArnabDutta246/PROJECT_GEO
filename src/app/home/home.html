@@ -1,57 +1,3 @@
-<nav class="navbar navbar-expand-lg py-1 px-10 border-bottom bg-dark" style="
-    padding: 0 30px;
-    border-bottom: 5px solid #efefef !important;
-">
-    <div class="container-fluid">
-        <a class="navbar-brand fw-light text-white" href="#" style="font-size: 14px;">ProjectGeo</a>
-        <ul class="navbar-nav" style="font-size: 14px !important;">
-            <li class="nav-item">
-                <a class="nav-link active text-white" aria-current="page" href="/projects">Projects</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link text-white" href="#">Employees</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link text-white" href="#">Tasks</a>
-            </li>
-            <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown"
-                    aria-expanded="false">
-                    Settings
-                </a>
-                <ul class="dropdown-menu">
-                    <li><a class="dropdown-item text-white" href="#">Action</a></li>
-                    <li><a class="dropdown-item text-white" href="#">Another action</a></li>
-                    <li><a class="dropdown-item text-white" href="#">Something else here</a></li>
-                </ul>
-            </li>
-        </ul>
-        <div class="d-flex justify-content-end align-items-center gap-2">
-            <button type="button" class="btn btn-sm btn-light position-relative">
-                <i class="fa-solid fa-user"></i>
-                <span
-                    class="position-absolute top-0 start-100 translate-middle p-2 bg-danger border border-light rounded-circle">
-                    <span class="visually-hidden">New alerts</span>
-                </span>
-            </button>
-            <button type="button" class="btn btn-sm btn-light position-relative">
-                <i class="fa-solid fa-bell"></i>
-                <span
-                    class="position-absolute top-0 start-100 translate-middle p-2 bg-danger border border-light rounded-circle">
-                    <span class="visually-hidden">New alerts</span>
-                </span>
-            </button>
-            <button type="button" class="btn btn-sm btn-light position-relative">
-                <i class="fa-solid fa-message"></i>
-            </button>
-            <button type="button" class="btn btn-sm btn-light position-relative" (click)="logout()">
-                <i class="fa-solid fa-gear"></i>
-            </button>
-        </div>
-
-    </div>
-</nav>
-
 <div class="container-fluid py-2 border-bottom-1 border-gray-200 bg-light" style="
     padding: 0 40px;
     border-bottom: 1px solid #efefef !important;
@@ -80,20 +26,14 @@
             </div>
         </div>
         <div class="col-md-3 border border-gray-200 p-1 custom-border">
-            <span class="text-muted custom-text-muted">State</span>
-            <select class="form-select form-select-sm border-0 bg-light" aria-label="Small select example"
-            style="border: 1px solid #e3e3e3 !important;
-            font-size: 16px;
-            margin: 4px 1px;"
-            >
-                <option selected>Arunachal Pradesh</option> 
+            <select class="form-select form-select-sm border-0" aria-label="Small select example">
+                <option selected>Arunachal Pradesh</option>
             </select>
         </div>
         <div class="col-md-3 border border-gray-200 p-1 custom-border" style="border-top-left-radius: 5px;
     border-bottom-left-radius: 5px;">
-            <span class="text-muted custom-text-muted">District</span>
-            <select class="form-select form-select-sm border-0 bg-light" 
-                    [(ngModel)]="selectedDistrict" 
+            <select class="form-select form-select-sm border-0"
+                    [(ngModel)]="selectedDistrict"
                     (ngModelChange)="onDistrictChange()"
                     aria-label="Select District"
                     
@@ -106,9 +46,8 @@
             </select>
         </div>
         <div class="col-md-3 border border-gray-200 p-1 custom-border">
-            <span class="text-muted custom-text-muted">Block</span>
-            <select class="form-select form-select-sm border-0 bg-light" 
-                    [(ngModel)]="selectedMouza" 
+            <select class="form-select form-select-sm border-0"
+                    [(ngModel)]="selectedMouza"
                     (ngModelChange)="onMouzaChange()"
                     [disabled]="!selectedDistrict || mouzas().length === 0"
                     aria-label="Select Block"
@@ -120,7 +59,7 @@
                 <option *ngFor="let mouza of mouzas()" [value]="mouza">{{ mouza }}</option>
             </select>
         </div>
-      
+
         <!-- <div class="col-md-1 border border-gray-200 p-1 custom-border" style="border-top-right-radius: 5px;
     border-bottom-right-radius: 5px;">
             <button class="btn btn-sm btn-light border-0 w-100 font-weight-bold">
@@ -207,8 +146,8 @@
                 <div style="position: relative;">
                     <div class="d-flex gap-2 justify-content-center align-items-center" style="position: absolute; top: 10px; left: 0; right: 0;z-index: 99999;width: fit-content;
     transform: translate(40%, 40%);">
-                        <button 
-                            *ngFor="let layer of availableLayers()" 
+                        <button
+                            *ngFor="let layer of availableLayers()"
                             class="btn btn-sm position-relative"
                             [class.btn-primary]="isLayerActive(layer.name)"
                             [class.btn-light]="!isLayerActive(layer.name)"

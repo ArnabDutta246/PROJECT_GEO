@@ -1,0 +1,15 @@
+<button
+  type="button"
+  class="header-btn"
+  (click)="toggleTheme()"
+  [attr.aria-label]="isDarkMode() ? 'Switch to light mode' : 'Switch to dark mode'"
+  [title]="isDarkMode() ? 'Switch to light mode' : 'Switch to dark mode'">
+  <span class="theme-icon" [class.dark]="isDarkMode()">
+    @if (isDarkMode()) {
+      <i class="fas fa-sun"></i>
+    } @else {
+      <i class="fas fa-moon"></i>
+    }
+  </span>
+</button>
+

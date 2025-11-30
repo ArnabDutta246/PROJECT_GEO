@@ -1,0 +1,55 @@
+// Dark Theme - ProjectGeo Dashboard Style
+.dark-theme {
+  // Colors - Vibrant neon accents matching the dashboard design
+  --color-primary: #ff00ff; // Vibrant pink-purple primary accent
+  --color-primary-alt: #8a2be2; // Purple variant for gradients
+  --color-secondary: #868e96;
+  --color-success: #51cf66; // Bright green for active/verified states
+  --color-danger: #ff6b6b;
+  --color-warning: #ffd43b; // Bright yellow for warnings
+  --color-info: #4dabf7; // Vibrant light blue for data points
+
+  // Background colors - Dark purple-black theme
+  --bg-primary: #1a1a1a; // Very dark grey/black primary background
+  --bg-secondary: #2d2d2d; // Dark grey for panels, cards, header
+  --bg-tertiary: #3d3d3d; // Medium-dark grey for hover states, selected items
+
+  // Text colors
+  --text-primary: #e9ecef; // Off-white primary text
+  --text-secondary: #adb5bd; // Light grey secondary text
+  --text-muted: #868e96; // Medium grey muted text
+  --text-inverse: #212529; // Dark text for light backgrounds
+
+  // Border colors
+  --border-color: #404040; // Dark grey borders
+  --border-color-light: #2d2d2d; // Lighter borders
+
+  // Shadow (lighter shadows for dark mode)
+  --shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 0.5rem 1rem rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 1rem 3rem rgba(0, 0, 0, 0.5);
+
+  // Card
+  --card-bg: #2d2d2d; // Dark grey card background
+  --card-border: #404040; // Dark grey card border
+
+  // Input
+  --input-bg: #2d2d2d; // Dark grey input background
+  --input-border: #404040; // Dark grey input border
+  --input-focus-border: #4dabf7; // Vibrant light blue focus border
+  --input-focus-shadow: rgba(77, 171, 247, 0.25);
+  --input-focus-shadow-light: rgba(77, 171, 247, 0.3);
+
+  // Link
+  --link-color: #4dabf7; // Vibrant light blue for links
+  --link-hover-color: #74c0fc; // Lighter blue on hover
+
+  // Special accent colors for neon effects
+  --neon-pink: #ff00ff; // Vibrant pink for neon outlines
+  --neon-purple: #8a2be2; // Purple for neon accents
+  --neon-blue: #4dabf7; // Light blue for data highlights
+
+  // Override Bootstrap dark mode if needed
+  color-scheme: dark;
+}
+

@@ -1,3 +1,90 @@
+// Home Component Styles with Theme Support
+.custom-border {
+    border-color: var(--border-color) !important;
+    font-size: 14px !important;
+}
+
+// Navbar theme support
+.navbar {
+    background-color: var(--bg-secondary) !important;
+    border-bottom-color: var(--border-color) !important;
+
+    .navbar-brand,
+    .nav-link {
+        color: var(--text-primary) !important;
+
+        &:hover {
+            color: var(--link-hover-color) !important;
+        }
+    }
+
+    .dropdown-menu {
+        background-color: var(--card-bg);
+        border-color: var(--border-color);
+
+        .dropdown-item {
+            color: var(--text-primary);
+
+            &:hover {
+                background-color: var(--bg-secondary);
+                color: var(--text-primary);
+            }
+        }
+    }
+}
+
+// Container with theme support
+.container-fluid {
+    background-color: var(--bg-primary) !important;
+    border-bottom-color: var(--border-color) !important;
+
+    .row {
+        background-color: var(--bg-primary) !important;
+    }
+}
+
+// Form selects with theme support
+.form-select {
+    background-color: var(--input-bg) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--input-border) !important;
+
+    &:focus {
+        background-color: var(--input-bg) !important;
+        color: var(--text-primary) !important;
+        border-color: var(--input-focus-border) !important;
+        box-shadow: 0 0 0 0.25rem var(--input-focus-shadow);
+    }
+}
+
+// Buttons with theme support
+.btn {
+    &.btn-light {
+        background-color: var(--bg-secondary);
+        color: var(--text-primary);
+        border-color: var(--border-color);
+
+        &:hover {
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+            border-color: var(--border-color);
+        }
+    }
+
+    &.btn-primary {
+        background-color: var(--color-primary);
+        border-color: var(--color-primary);
+
+        &:hover {
+            background-color: var(--link-hover-color);
+            border-color: var(--link-hover-color);
+        }
+    }
+}
+
+// Border utilities
+.border-gray-200 {
+    border-color: var(--border-color-light) !important;
 .custom-border {
     border-color: #e7e7e7 !important;
     font-size: 14px !important;

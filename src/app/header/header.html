@@ -1,0 +1,51 @@
+<nav class="navbar navbar-expand-lg py-1 px-10">
+    <div class="container-fluid">
+        <a class="navbar-brand text-primary" href="#">ProjectGeo</a>
+        <ul class="navbar-nav" style="font-size: 14px !important;">
+            <li class="nav-item">
+                <a class="nav-link active text-white" aria-current="page" href="#">Projects</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-primary" href="#">Employees</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-primary" href="#">Tasks</a>
+            </li>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle text-primary" href="#" role="button" data-bs-toggle="dropdown"
+                    aria-expanded="false">
+                    Settings
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item text-primary" href="#">Action</a></li>
+                    <li><a class="dropdown-item text-primary" href="#">Another action</a></li>
+                    <li><a class="dropdown-item text-primary" href="#">Something else here</a></li>
+                </ul>
+            </li>
+        </ul>
+        <div class="d-flex justify-content-end align-items-center gap-2">
+            <button type="button" class="btn btn-sm btn-primary position-relative">
+                <i class="fa-solid fa-user"></i>
+                <span
+                    class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle">
+                    <span class="visually-hidden">New alerts</span>
+                </span>
+            </button>
+            <button type="button" class="btn header-btn position-relative">
+                <i class="fa-solid fa-bell"></i>
+                <span
+                    class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle">
+                    <span class="visually-hidden">New alerts</span>
+                </span>
+            </button>
+            <button type="button" class="btn header-btn position-relative">
+                <i class="fa-solid fa-message"></i>
+            </button>
+            <app-theme-toggle />
+            <button type="button" class="btn header-btn position-relative">
+                <i class="fa-solid fa-gear"></i>
+            </button>
+        </div>
+
+    </div>
+</nav>
