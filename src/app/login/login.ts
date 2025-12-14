@@ -16,6 +16,9 @@ export class Login {
   errorMessage: string = '';
   isLoading: boolean = false;
 
+  // Array for template loops
+  particles = Array(15).fill(0);
+
   constructor(
     private authService: AuthService,
     private router: Router
@@ -31,7 +34,7 @@ export class Login {
 
     try {
       const loginSuccess = this.authService.login(this.email, this.password);
-      
+
       if (loginSuccess) {
         // Successful login - redirect to home
         this.router.navigate(['/home']);

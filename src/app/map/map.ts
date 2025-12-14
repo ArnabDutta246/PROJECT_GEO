@@ -16,19 +16,19 @@ import { AuthService, IDefaultUser } from '../services/auth/auth';
       <button (click)="hideInfoPanel()" style="position: absolute; top: 8px; right: 8px; background: #dc3545; color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer;">×</button>
       <h4 style="margin: 0 0 12px 0; color: #0066cc; font-size: 16px; border-bottom: 1px solid #ddd; padding-bottom: 8px; padding-right: 30px;">Selected Information</h4>
       <div style="margin: 8px 0; font-size: 13px;">
-        <strong style="color: #333; display: inline-block; width: 90px;">State:</strong> 
+        <strong style="color: #333; display: inline-block; width: 90px;">State:</strong>
         <span style="color: #666;">Arunachal Pradesh</span>
       </div>
       <div style="margin: 8px 0; font-size: 13px;">
-        <strong style="color: #333; display: inline-block; width: 90px;">District:</strong> 
+        <strong style="color: #333; display: inline-block; width: 90px;">District:</strong>
         <span id="selectedDistrict" style="color: #0066cc; font-weight: bold;">{{ selectedDistrict || 'None' }}</span>
       </div>
       <div style="margin: 8px 0; font-size: 13px;">
-        <strong style="color: #333; display: inline-block; width: 90px;">Mouza Count:</strong> 
+        <strong style="color: #333; display: inline-block; width: 90px;">Mouza Count:</strong>
         <span id="mouzaCount" style="color: #28a745; font-weight: bold;">{{ mouzaCount }}</span>
       </div>
       <div style="margin: 8px 0; font-size: 13px;">
-        <strong style="color: #333; display: inline-block; width: 90px;">Selected Mouza:</strong> 
+        <strong style="color: #333; display: inline-block; width: 90px;">Selected Mouza:</strong>
         <span id="selectedMouza" style="color: #dc3545; font-weight: bold;">{{ selectedMouza || 'None' }}</span>
       </div>
     </div> -->
@@ -41,16 +41,16 @@ import { AuthService, IDefaultUser } from '../services/auth/auth';
          [style.display]="shouldShowPanelValue ? 'flex' : 'none'"
          [style.visibility]="shouldShowPanelValue ? 'visible' : 'hidden'"
          [attr.data-visible]="shouldShowPanelValue">
-      <div class="panel-drag-handle" 
+      <div class="panel-drag-handle"
            (mousedown)="startDrag($event)"
            (touchstart)="startDrag($event)">
-        <button class="close-location-details" 
-                title="Close" 
+        <button class="close-location-details"
+                title="Close"
                 (click)="hideLocationDetailsPanel()"
                 (mousedown)="$event.stopPropagation()"
                 (touchstart)="$event.stopPropagation()">×</button>
         <h4 class="location-title">{{ selectedLocation()?.name }}</h4>
-        
+
       </div>
       <div class="location-info">
         <!-- Tab Navigation -->
@@ -61,22 +61,22 @@ import { AuthService, IDefaultUser } from '../services/auth/auth';
            <i class="fas fa-external-link-alt" style="color:#0066cc"></i>
          </div>
         <div class="tab-navigation">
-          <button class="tab-button" 
+          <button class="tab-button"
                   [class.active]="activeTab === 'info'"
                   (click)="setActiveTab('info')">
             INFO
           </button>
-          <button class="tab-button" 
+          <button class="tab-button"
                   [class.active]="activeTab === 'beneficiaries'"
                   (click)="setActiveTab('beneficiaries')">
             BENEFICIERIES DETAILS
           </button>
-          <button class="tab-button" 
+          <button class="tab-button"
                   [class.active]="activeTab === 'documentation'"
                   (click)="setActiveTab('documentation')">
             DOCUMENTATION
           </button>
-          <button class="tab-button" 
+          <button class="tab-button"
                   [class.active]="activeTab === 'photovideo'"
                   (click)="setActiveTab('photovideo')">
             PHOTO & VIDEOGRAPHY
@@ -88,11 +88,11 @@ import { AuthService, IDefaultUser } from '../services/auth/auth';
           <!-- INFO Tab -->
           <div *ngIf="activeTab === 'info'" [class.active]="activeTab === 'info'"  class="tab-pane">
             <div class="location-type" [style.background-color]="getTypeColor(selectedLocation()?.type)">
-              <strong>Type:</strong> 
+              <strong>Type:</strong>
               <span>{{ getTypeLabel(selectedLocation()?.type) }}</span>
             </div>
             <div class="location-coords">
-              <strong>Coordinates:</strong> 
+              <strong>Coordinates:</strong>
               <span>{{ selectedLocation()?.latitude?.toFixed(4) }}, {{ selectedLocation()?.longitude?.toFixed(4) }}</span>
             </div>
             <div *ngIf="currentProjectData?.projectName" class="location-description" style="margin-bottom: 15px;">
@@ -168,11 +168,11 @@ import { AuthService, IDefaultUser } from '../services/auth/auth';
               </div>
               <div *ngIf="!currentProjectData?.aoiFile" style="padding: 20px; background: #f8f9fa; border-radius: 6px; margin-top: 15px; text-align: center;">
                 <div style="margin-bottom: 15px;">
-                  <img src="/assets/images/dacument.jpg" alt="Document placeholder" 
+                  <img src="/assets/images/dacument.jpg" alt="Document placeholder"
                        style="max-width: 100%; height: auto; max-height: 200px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                 </div>
                 <div style="margin-bottom: 10px;">
-                  <img src="/assets/images/folder.jpg" alt="Folder placeholder" 
+                  <img src="/assets/images/folder.jpg" alt="Folder placeholder"
                        style="max-width: 100%; height: auto; max-height: 150px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                 </div>
                 <!-- <p class="text-muted" style="color: #999; margin: 15px 0 0 0; text-align: center;">
@@ -193,12 +193,12 @@ import { AuthService, IDefaultUser } from '../services/auth/auth';
               <div style="padding: 20px; background: #f8f9fa; border-radius: 6px; margin-top: 15px; text-align: center;">
                 <div style="margin-bottom: 20px;">
                   <h6 style="color: #333; margin-bottom: 10px; font-size: 14px; font-weight: 600;">Photos</h6>
-                  <img src="/assets/images/imagedummy.jpg" alt="Image placeholder" 
+                  <img src="/assets/images/imagedummy.jpg" alt="Image placeholder"
                        style="max-width: 100%; height: auto; max-height: 200px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                 </div>
                 <div style="margin-bottom: 10px;">
                   <h6 style="color: #333; margin-bottom: 10px; font-size: 14px; font-weight: 600;">Videos</h6>
-                  <img src="/assets/images/videodummy.jpg" alt="Video placeholder" 
+                  <img src="/assets/images/videodummy.jpg" alt="Video placeholder"
                        style="max-width: 100%; height: auto; max-height: 200px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                 </div>
                 <!-- <p class="text-muted" style="color: #999; margin: 15px 0 0 0; text-align: center;">
@@ -217,7 +217,8 @@ import { AuthService, IDefaultUser } from '../services/auth/auth';
   `,
   styles: [`
     #map {
-      height: 77vh;
+      min-height: 80vh;
+      // height: 100%;
       width: 100%;
     }
     .info-panel {
@@ -234,7 +235,7 @@ import { AuthService, IDefaultUser } from '../services/auth/auth';
       font-family: Arial, sans-serif;
       backdrop-filter: blur(5px);
     }
-    
+
     .info-panel h4 {
       margin: 0 0 12px 0;
       color: #0066cc;
@@ -249,13 +250,13 @@ import { AuthService, IDefaultUser } from '../services/auth/auth';
       font-size: 13px;
       line-height: 1.4;
     }
-    
+
     .info-item strong {
       color: #333;
       display: inline-block;
       width: 90px;
     }
-    
+
     .info-item span {
       color: #666;
     }
@@ -294,7 +295,7 @@ import { AuthService, IDefaultUser } from '../services/auth/auth';
       justify-content: center;
       transition: background-color 0.2s;
     }
-    
+
     #closeInfoPanel:hover {
       background: #c82333;
     }
@@ -319,7 +320,7 @@ import { AuthService, IDefaultUser } from '../services/auth/auth';
       flex-direction: column;
       will-change: transform;
     }
-    
+
     @keyframes slideIn {
       from {
         opacity: 0;
@@ -352,7 +353,7 @@ import { AuthService, IDefaultUser } from '../services/auth/auth';
       flex-direction: column;
       min-height: 0;
     }
-    
+
     .location-details-panel .location-title {
       margin: 0;
       color: #ff6b35;
@@ -360,12 +361,12 @@ import { AuthService, IDefaultUser } from '../services/auth/auth';
       font-weight: bold;
       padding-right: 35px;
     }
-    
+
     .location-details-panel .location-info {
       font-size: 14px;
       line-height: 1.6;
     }
-    
+
     .location-details-panel .location-type {
       margin-bottom: 15px;
       padding: 10px;
@@ -373,18 +374,18 @@ import { AuthService, IDefaultUser } from '../services/auth/auth';
       color: white;
       font-weight: bold;
     }
-    
+
     .location-details-panel .location-type strong {
       color: white;
       display: inline-block;
       margin-right: 8px;
     }
-    
+
     .location-details-panel .location-type span {
       color: white;
       text-transform: capitalize;
     }
-    
+
     .location-details-panel .location-coords {
       margin-bottom: 15px;
       padding: 10px;
@@ -392,31 +393,31 @@ import { AuthService, IDefaultUser } from '../services/auth/auth';
       border-radius: 6px;
       border-left: 4px solid #ff6b35;
     }
-    
+
     .location-details-panel .location-coords strong {
       color: #333;
       display: block;
       margin-bottom: 5px;
     }
-    
+
     .location-details-panel .location-coords span {
       color: #666;
       font-family: 'Courier New', monospace;
     }
-    
+
     .location-details-panel .location-description strong {
       color: #333;
       display: block;
       margin-bottom: 8px;
     }
-    
+
     .location-details-panel .location-description p {
       margin: 0;
       color: #555;
       text-align: justify;
       line-height: 1.7;
     }
-    
+
     /* Tab Navigation Styles */
     .tab-navigation {
       display: flex;
@@ -425,7 +426,7 @@ import { AuthService, IDefaultUser } from '../services/auth/auth';
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
     }
-    
+
     .tab-button {
       flex: 1;
       min-width: 0;
@@ -443,18 +444,18 @@ import { AuthService, IDefaultUser } from '../services/auth/auth';
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    
+
     .tab-button:hover {
       color: #ff6b35;
       background: rgba(255, 107, 53, 0.05);
     }
-    
+
     .tab-button.active {
       color: #ff6b35;
       border-bottom-color: #ff6b35;
       background: rgba(255, 107, 53, 0.08);
     }
-    
+
     /* Tab Content Styles */
     .tab-content {
       min-height: 200px;
@@ -464,14 +465,14 @@ import { AuthService, IDefaultUser } from '../services/auth/auth';
       width: 100%;
       position: relative;
     }
-    
+
     .tab-pane {
       animation: fadeIn 0.3s ease-in;
       padding: 10px 0;
       display: block;
       min-height: 150px;
     }
-    
+
     @keyframes fadeIn {
       from {
         opacity: 0;
@@ -482,11 +483,11 @@ import { AuthService, IDefaultUser } from '../services/auth/auth';
         transform: translateY(0);
       }
     }
-    
+
     .tab-section {
       padding: 10px 0;
     }
-    
+
     .tab-section h5 {
       color: #333;
       font-size: 16px;
@@ -495,21 +496,21 @@ import { AuthService, IDefaultUser } from '../services/auth/auth';
       padding-bottom: 8px;
       border-bottom: 2px solid #f0f0f0;
     }
-    
+
     .tab-section .text-muted {
       color: #999;
       font-size: 13px;
       font-style: italic;
       margin: 0;
     }
-    
+
     /* Ensure location info elements are visible in tabs */
     .tab-pane .location-type,
     .tab-pane .location-coords,
     .tab-pane .location-description {
       margin-bottom: 15px;
     }
-    
+
     .location-details-panel .close-location-details {
       position: absolute;
       top: 12px;
@@ -530,12 +531,12 @@ import { AuthService, IDefaultUser } from '../services/auth/auth';
       line-height: 1;
       z-index: 10;
     }
-    
+
     .location-details-panel .close-location-details:hover {
       background: #e55a2b;
       transform: scale(1.1);
     }
-    
+
     .location-details-panel .close-location-details:active {
       transform: scale(0.95);
     }
@@ -545,7 +546,7 @@ import { AuthService, IDefaultUser } from '../services/auth/auth';
       cursor: pointer;
       transition: transform 0.2s;
     }
-    
+
     .location-marker:hover {
       transform: scale(1.2);
     }
@@ -776,12 +777,12 @@ export class MapComponent implements AfterViewInit, OnDestroy {
           padding: [50, 50],
           maxZoom: 10
         });
-        
+
         // Highlight the district
         this.ngZone.run(() => {
           this.highlightDistrict(layer, districtName);
         });
-        
+
         found = true;
         return;
       }
@@ -817,7 +818,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
           padding: [50, 50],
           maxZoom: 13
         });
-        
+
         // Highlight the mouza
         this.ngZone.run(() => {
           this.selectedMouza = blockName;
@@ -825,7 +826,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
           this.mapSelectionService.selectMouza(blockName);
           this.cdr.detectChanges();
         });
-        
+
         found = true;
         return;
       }
@@ -1287,7 +1288,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     layer.setStyle({
       color: "red",
       weight: 3,
-      // fillColor: "red", 
+      // fillColor: "red",
       fillOpacity: 0
     });
 
@@ -1370,25 +1371,25 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   }
 
   private loadMouzasForDistrict(districtName: string, districtLayer: any, mouzaToSelect?: string | null): void {
-   
+
    console.log(" LOAD MOUZAS FOR DISTRICT", districtName)
     if (!this.mouzaData || !this.mouzaData.features) return;
 
     // Check if we need to auto-zoom for block_manager on initial load
     // Admin and state_manager don't have this restriction
     const user = this.userProfile();
-    const shouldAutoZoom = user?.role === 'block_manager' && 
-                          user?.blocks && 
-                          user.blocks.length > 0 && 
+    const shouldAutoZoom = user?.role === 'block_manager' &&
+                          user?.blocks &&
+                          user.blocks.length > 0 &&
                           user.blocks[0] !== 'ALL' &&
                           !mouzaToSelect; // Only auto-zoom if not already selecting a mouza
 
     // For block_manager, get their assigned blocks
     // Admin and state_manager see all blocks
-    const userBlocks = user?.role === 'block_manager' && 
-                      user?.blocks && 
-                      user.blocks[0] !== 'ALL' 
-                      ? user.blocks 
+    const userBlocks = user?.role === 'block_manager' &&
+                      user?.blocks &&
+                      user.blocks[0] !== 'ALL'
+                      ? user.blocks
                       : null;
 
     // Clear previous mouzas
@@ -2072,7 +2073,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
     // Store project data in sessionStorage to pass to the new tab
     sessionStorage.setItem('selectedProjectData', JSON.stringify(this.currentProjectData));
-    
+
     // Open the project page in a new tab
     const baseUrl = window.location.origin;
     window.open(`${baseUrl}/projects`, '_blank');
@@ -2166,7 +2167,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     let projectData = null;
     const projects = this.getProjectLocationMarkersFromLocalStorage();
     projectData = projects.find((p: any) => p.activityName === location.name);
-    
+
     // Show the panel immediately even if map isn't ready
     const locationInfo = projectData || {
       name: location.name,

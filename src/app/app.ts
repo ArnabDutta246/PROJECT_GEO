@@ -3,10 +3,11 @@ import { RouterOutlet } from '@angular/router';
 import { ThemeService } from './theme.service';
 import { ThemeToggleComponent } from './theme-toggle/theme-toggle';
 import { Header } from "./header/header";
+import { PreLoaderComponent } from './pre-loader/pre-loader';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, ThemeToggleComponent, Header],
+  imports: [RouterOutlet, ThemeToggleComponent, Header, PreLoaderComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })

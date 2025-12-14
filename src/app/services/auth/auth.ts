@@ -10,6 +10,7 @@ export interface IDefaultUser {
   districts: string[];
   blocks: string[];
   permissions: string[];
+  photo?: string;
 }
 @Injectable({
   providedIn: 'root'
@@ -101,13 +102,13 @@ export class AuthService {
     if (this.isBrowser()) {
       localStorage.removeItem('currentLoginUser');
     }
-  } 
+  }
 
   public getCurrentLoginUser(): IDefaultUser | null {
     if (!this.isBrowser()) {
       return null;
     }
-    
+
     try {
       const user = localStorage.getItem('currentLoginUser');
       if(user){
@@ -123,5 +124,5 @@ export class AuthService {
       this.currentLoginUser.next(null);
       return null;
     }
-  } 
+  }
 }

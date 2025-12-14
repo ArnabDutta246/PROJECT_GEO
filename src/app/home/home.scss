@@ -43,20 +43,6 @@
     }
 }
 
-// Form selects with theme support
-.form-select {
-    background-color: var(--input-bg) !important;
-    color: var(--text-primary) !important;
-    border-color: var(--input-border) !important;
-
-    &:focus {
-        background-color: var(--input-bg) !important;
-        color: var(--text-primary) !important;
-        border-color: var(--input-focus-border) !important;
-        box-shadow: 0 0 0 0.25rem var(--input-focus-shadow);
-    }
-}
-
 // Buttons with theme support
 .btn {
     &.btn-light {

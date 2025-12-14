@@ -13,12 +13,18 @@
   --bg-primary: #1a1a1a; // Very dark grey/black primary background
   --bg-secondary: #2d2d2d; // Dark grey for panels, cards, header
   --bg-tertiary: #3d3d3d; // Medium-dark grey for hover states, selected items
+  --bg-navbar: #0F172A;
+  --active-nv-link: #1E293B;
+  --input-activeBox: #344561;
 
   // Text colors
   --text-primary: #e9ecef; // Off-white primary text
   --text-secondary: #adb5bd; // Light grey secondary text
   --text-muted: #868e96; // Medium grey muted text
   --text-inverse: #212529; // Dark text for light backgrounds
+  --text-light-Blue: #94A3B8;
+  --text-light-Blue-placeholder: #c0c8d382 ;
+  --inputLabelText: #bbbbbb ;
 
   // Border colors
   --border-color: #404040; // Dark grey borders
@@ -48,6 +54,32 @@
   --neon-pink: #ff00ff; // Vibrant pink for neon outlines
   --neon-purple: #8a2be2; // Purple for neon accents
   --neon-blue: #4dabf7; // Light blue for data highlights
+
+  // Login page specific colors
+  --login-bg-primary: #0a0a0f; // Main background
+  --login-bg-secondary: #1a1a2e; // Secondary background
+  --login-bg-tertiary: #0f0f1f; // Tertiary background
+  --login-card-bg: rgba(26, 26, 46, 0.4); // Card background with transparency
+  --login-card-border: rgba(77, 171, 247, 0.2); // Card border
+  --login-card-shadow: rgba(0, 0, 0, 0.4); // Card shadow
+  --login-gradient-start: rgba(77, 171, 247, 0.12); // Gradient start
+  --login-gradient-middle: rgba(255, 0, 255, 0.08); // Gradient middle
+  --login-gradient-end: rgba(138, 43, 226, 0.06); // Gradient end
+  --login-particle-color: rgba(77, 171, 247, 0.6); // Particle color
+  --login-particle-glow: rgba(77, 171, 247, 0.8); // Particle glow
+  --login-input-bg: rgba(45, 45, 61, 0.6); // Input background
+  --login-input-bg-focus: rgba(45, 45, 61, 0.8); // Input background on focus
+  --login-input-border: rgba(77, 171, 247, 0.2); // Input border
+  --login-button-gradient-1: #00d4ff; // Button gradient color 1
+  --login-button-gradient-2: #5b8cff; // Button gradient color 2
+  --login-button-gradient-3: #a855f7; // Button gradient color 3
+  --login-button-gradient-4: #ec4899; // Button gradient color 4
+  --login-button-gradient-5: #ff00ff; // Button gradient color 5
+  --login-button-shadow-1: rgba(0, 212, 255, 0.5); // Button shadow color 1
+  --login-button-shadow-2: rgba(168, 85, 247, 0.4); // Button shadow color 2
+  --login-button-shadow-3: rgba(255, 0, 255, 0.3); // Button shadow color 3
+  --login-text-gradient-start: #e9ecef; // Text gradient start
+  --login-text-gradient-end: #adb5bd; // Text gradient end
 
   // Override Bootstrap dark mode if needed
   color-scheme: dark;

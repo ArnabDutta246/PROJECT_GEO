@@ -1,0 +1,17 @@
+@if (isLoading() || !isFadingOut()) {
+  <div class="pre-loader" [class.fade-out]="isFadingOut()">
+    <div class="loader-container">
+      <div class="loader-spinner">
+        <div class="spinner-ring"></div>
+        <div class="spinner-ring"></div>
+        <div class="spinner-ring"></div>
+        <div class="spinner-ring"></div>
+      </div>
+      <div class="loader-text">
+        <span class="loader-title">ProjectGeo</span>
+        <span class="loader-subtitle">Loading...</span>
+      </div>
+    </div>
+  </div>
+}
+
