@@ -228,6 +228,28 @@
   }
 }
 
+// Marker tooltip styles
+.marker-tooltip {
+  background-color: rgba(0, 0, 0, 0.85) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 6px !important;
+  padding: 8px 12px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+  white-space: normal !important;
+  max-width: 250px !important;
+  text-align: left !important;
+  pointer-events: none !important;
+  z-index: 1000 !important;
+  line-height: 1.4 !important;
+}
+
+.marker-tooltip::before {
+  border-top-color: rgba(0, 0, 0, 0.85) !important;
+}
+
 .pulsing-marker {
   animation: pulse 2s infinite;
 }

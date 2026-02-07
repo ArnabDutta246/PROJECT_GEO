@@ -4,34 +4,71 @@ import { CommonModule } from '@angular/common';
 import { MapSelectionService } from '../map-selection.service';
 import { Subscription } from 'rxjs';
 import { AuthService, IDefaultUser } from '../services/auth/auth';
+import { PieChartComponent, PieChartData } from '../shared/pie-chart/pie-chart';
+import { Project as ProjectService } from '../services/project/project';
 
 @Component({
   selector: 'app-map',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, PieChartComponent],
   encapsulation: ViewEncapsulation.None,
   template: `
     <div id="map"></div>
-    <!-- <div *ngIf="showInfoPanel" id="infoPanel" class="info-panel" style="position: fixed !important; bottom: 20px !important; right: 20px !important; width: 250px !important; background: white !important; border: 2px solid #0066cc !important; border-radius: 8px !important; padding: 15px !important; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important; z-index: 99999 !important;">
-      <button (click)="hideInfoPanel()" style="position: absolute; top: 8px; right: 8px; background: #dc3545; color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer;">×</button>
-      <h4 style="margin: 0 0 12px 0; color: #0066cc; font-size: 16px; border-bottom: 1px solid #ddd; padding-bottom: 8px; padding-right: 30px;">Selected Information</h4>
-      <div style="margin: 8px 0; font-size: 13px;">
-        <strong style="color: #333; display: inline-block; width: 90px;">State:</strong>
-        <span style="color: #666;">Arunachal Pradesh</span>
+    <div *ngIf="showInfoPanel" id="infoPanel" class="info-panel" style="position: fixed !important; bottom: 0 !important; right: 0 !important; width: 330px !important; max-width: 92vw !important; height: 80vh !important; max-height: 100vh !important; background: white !important; border-left: 2px solid #0066cc !important; padding: 15px !important; box-shadow: -4px 0 12px rgba(0, 0, 0, 0.3) !important; z-index: 99999 !important; display: flex !important; flex-direction: column !important; overflow: hidden !important;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 12px; border-bottom: 1px solid #ddd; flex-shrink: 0;">
+        <h5 style="margin: 0; color: #0066cc; font-weight: 600; font-size: 14px;">District Information</h5>
+        <button (click)="hideInfoPanel()" style="background: #dc3545; color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; flex-shrink: 0;">×</button>
       </div>
-      <div style="margin: 8px 0; font-size: 13px;">
-        <strong style="color: #333; display: inline-block; width: 90px;">District:</strong>
-        <span id="selectedDistrict" style="color: #0066cc; font-weight: bold;">{{ selectedDistrict || 'None' }}</span>
+      <div style="overflow-y: auto; overflow-x: hidden; flex: 1; padding-right: 5px;">
+        <div style="margin-bottom: 15px;  border-bottom: 1px solid #eee; font-size: 12px;">
+          <div style="margin-bottom: 8px;"><span style="color: #333; font-weight: 600;">State:</span> <span style="color: #666;">Arunachal Pradesh</span></div>
+          <div style="margin-bottom: 8px;"><span style="color: #333; font-weight: 600;">District:</span> <span id="selectedDistrict" style="color: #0066cc; font-weight: bold;">{{ selectedDistrict || 'None' }}</span></div>
+          <!-- <div style="margin-bottom: 8px;"><span style="color: #333; font-weight: 600;">Mouza Count:</span> <span id="mouzaCount" style="color: #28a745; font-weight: bold;">{{ mouzaCount }}</span></div>
+          <div><span style="color: #333; font-weight: 600;">Selected Mouza:</span> <span id="selectedMouza" style="color: #dc3545; font-weight: bold;">{{ selectedMouza || 'None' }}</span></div> -->
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 15px; margin-top: 15px;">
+          <!-- Column 1: Population -->
+          <div style="width: 100%; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #dee2e6;">
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+              <h6 style="margin: 0 0 10px 0; color: #333; font-size: 14px; font-weight: 600;">Population</h6>
+              <div style="font-size: 32px; font-weight: bold; color: #0066cc; margin: 10px 0;">
+                {{ totalPopulation | number:'1.0-0' }}
+              </div>
+              <div style="font-size: 12px; color: #666; margin-top: 5px; text-align: center;">
+                Population of the selected district
+              </div>
+            </div>
+          </div>
+          
+          <!-- Column 2: Male/Female Pie Chart -->
+          <div style="width: 100%; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #dee2e6; display: flex; flex-direction: column; align-items: center; justify-content: flex-start;">
+            <h6 style="margin: 0 0 10px 0; color: #333; font-size: 14px; font-weight: 600; text-align: center; width: 100%;">Gender Distribution</h6>
+            <div style="width: 100%; display: flex; justify-content: center;">
+              <app-pie-chart 
+                [data]="genderChartData" 
+                [size]="150"
+                [showLegend]="true"
+                [showCenterLabel]="false"
+                [defaultColors]="['#0066cc', '#e83e8c', '#17a2b8']">
+              </app-pie-chart>
+            </div>
+          </div>
+          
+          <!-- Column 3: Custom Pie Chart -->
+          <div style="width: 100%; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #dee2e6; display: flex; flex-direction: column; align-items: center; justify-content: flex-start;">
+            <h6 style="margin: 0 0 10px 0; color: #333; font-size: 14px; font-weight: 600; text-align: center; width: 100%;">Caste Distribution</h6>
+            <div style="width: 100%; display: flex; justify-content: center;">
+              <app-pie-chart 
+                [data]="customChartData" 
+                [size]="150"
+                [showLegend]="true"
+                [showCenterLabel]="false">
+              </app-pie-chart>
+            </div>
+          </div>
+        </div>
       </div>
-      <div style="margin: 8px 0; font-size: 13px;">
-        <strong style="color: #333; display: inline-block; width: 90px;">Mouza Count:</strong>
-        <span id="mouzaCount" style="color: #28a745; font-weight: bold;">{{ mouzaCount }}</span>
-      </div>
-      <div style="margin: 8px 0; font-size: 13px;">
-        <strong style="color: #333; display: inline-block; width: 90px;">Selected Mouza:</strong>
-        <span id="selectedMouza" style="color: #dc3545; font-weight: bold;">{{ selectedMouza || 'None' }}</span>
-      </div>
-    </div> -->
+    </div>
     <!-- Location Details Panel - Always in DOM, visibility controlled by style -->
     <div #locationDetailsPanel
          class="location-details-panel"
@@ -610,6 +647,56 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   showInfoPanel: boolean = false;
   private isHighlighting: boolean = false;
 
+  // Chart data
+  totalPopulation: number = 0;
+  genderChartData: PieChartData[] = [
+    { label: 'Male', value: 0, color: '#0066cc' },
+    { label: 'Female', value: 0, color: '#e83e8c' },
+    { label: 'Others', value: 0, color: '#17a2b8' }
+  ];
+  customChartData: PieChartData[] = [
+    { label: 'Nyishi', value: 0, color: '#28a745' },
+    { label: 'Adi', value: 0, color: '#0066cc' },
+    { label: 'Others', value: 0, color: '#ffc107' }
+  ];
+
+  /**
+   * Update chart data based on selected district/mouza
+   * This is a placeholder - replace with actual data from your API/service
+   */
+  private updateChartData(): void {
+    // Sample data - replace with actual data fetching logic
+    const basePopulation = this.selectedDistrict ? 50000 : 0;
+    const randomFactor = Math.random() * 0.3 + 0.85; // Random factor between 0.85 and 1.15
+    
+    this.totalPopulation = Math.round(basePopulation * randomFactor);
+    
+    // Update gender distribution (sample: 50% male, 48% female, 2% others)
+    const malePopulation = Math.round(this.totalPopulation * 0.50);
+    const femalePopulation = Math.round(this.totalPopulation * 0.48);
+    const othersGenderPopulation = this.totalPopulation - malePopulation - femalePopulation;
+    
+    this.genderChartData = [
+      { label: 'Male', value: malePopulation, color: '#0066cc' },
+      { label: 'Female', value: femalePopulation, color: '#e83e8c' },
+      { label: 'Others', value: othersGenderPopulation, color: '#17a2b8' }
+    ];
+    
+    // Update caste distribution (sample: Nyishi 40%, Adi 35%, Others 25%)
+    // These are sample percentages - replace with actual data from your API/service
+    const nyishiPopulation = Math.round(this.totalPopulation * 0.40);
+    const adiPopulation = Math.round(this.totalPopulation * 0.35);
+    const othersCastePopulation = this.totalPopulation - nyishiPopulation - adiPopulation;
+    
+    this.customChartData = [
+      { label: 'Nyishi', value: nyishiPopulation, color: '#28a745' },
+      { label: 'Adi', value: adiPopulation, color: '#0066cc' },
+      { label: 'Others', value: othersCastePopulation, color: '#ffc107' }
+    ];
+    
+    this.cdr.detectChanges();
+  }
+
   // Location markers state
   private locationMarkers: any[] = [];
   private locationMarkerMap: Map<string, any> = new Map(); // Map location name to marker
@@ -674,7 +761,8 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     private authService: AuthService,
     private mapSelectionService: MapSelectionService,
     private ngZone: NgZone,
-    private appRef: ApplicationRef
+    private appRef: ApplicationRef,
+    private projectService: ProjectService
   ) {
     // Effect to track panel visibility changes
     effect(() => {
@@ -695,7 +783,18 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
   async ngAfterViewInit(): Promise<void> {
     if (isPlatformBrowser(this.platformId)) {
+      // Initialize dummy project data if localStorage is empty
+      const hadDataBefore = localStorage.getItem('projectData');
+      this.projectService.initializeDummyData();
+      
+      // Reload projects from localStorage (in case they were just initialized)
       this.projectLocationMarkers = this.getProjectLocationMarkersFromLocalStorage();
+      console.log('Loaded projects from localStorage:', this.projectLocationMarkers.length);
+      
+      if (!hadDataBefore && this.projectLocationMarkers.length > 0) {
+        console.log('Dummy data was initialized. Projects available:', this.projectLocationMarkers.length);
+      }
+      
       await this.initMap();
       this.subscribeToSelections();
 
@@ -983,7 +1082,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     this.L.control.scale().addTo(this.map);
 
     // Add My Location button
-    this.addMyLocationControl();
+    // this.addMyLocationControl();
 
     // Ensure map resizes properly
     setTimeout(() => {
@@ -1304,6 +1403,9 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     this.activeLayer = layer;
     this.selectedDistrictFeature = layer.feature;
     this.selectedDistrict = districtName;
+
+    // Update chart data when district is selected
+    this.updateChartData();
 
     // Force show info panel - do this FIRST
     this.showInfoPanel = true;
@@ -1798,7 +1900,24 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   //getfrom local storage
   private getProjectLocationMarkersFromLocalStorage(): any[] {
     const projectLocationMarkers = localStorage.getItem('projectData');
-    return projectLocationMarkers ? JSON.parse(projectLocationMarkers) : [];
+    if (!projectLocationMarkers) {
+      return [];
+    }
+    
+    try {
+      const allProjects = JSON.parse(projectLocationMarkers);
+      
+      // Filter projects based on user role
+      const user = this.authService.getCurrentLoginUser();
+      if (user) {
+        return this.projectService.getProjectsFromLocalStorageByUser(user);
+      }
+      
+      return allProjects;
+    } catch (error) {
+      console.error('Error parsing project data from localStorage:', error);
+      return [];
+    }
   }
 
   private getMarkerIconByType(type: string): any {
@@ -1865,6 +1984,20 @@ export class MapComponent implements AfterViewInit, OnDestroy {
         bubblingMouseEvents: false
       }).addTo(this.map);
 
+      // Bind tooltip to show project name and address on hover
+      const projectName = project.activityName || project.projectName || 'Project';
+      const address = project.locationName || project.address || '';
+      const tooltipContent = address 
+        ? `<div style="text-align: left;"><strong>${projectName}</strong><br/><span style="font-size: 11px; opacity: 0.9;">${address}</span></div>`
+        : projectName;
+      marker.bindTooltip(tooltipContent, {
+        permanent: false,
+        direction: 'top',
+        offset: [0, -10],
+        className: 'marker-tooltip',
+        opacity: 0.9
+      });
+
       // Make marker clickable and add click event
       marker.on('click', (e: any) => {
         // Stop event propagation to prevent map click and other layer interactions
@@ -1880,12 +2013,16 @@ export class MapComponent implements AfterViewInit, OnDestroy {
         if (marker !== this.selectedMarker) {
           marker.setOpacity(0.8);
         }
+        // Open tooltip on hover
+        marker.openTooltip();
       });
 
       marker.on('mouseout', () => {
         if (marker !== this.selectedMarker) {
           marker.setOpacity(1);
         }
+        // Close tooltip on mouseout
+        marker.closeTooltip();
       });
 
       this.locationMarkers.push(marker);
@@ -2221,6 +2358,32 @@ export class MapComponent implements AfterViewInit, OnDestroy {
         interactive: true,
         bubblingMouseEvents: false
       }).addTo(this.map);
+
+      // Bind tooltip to show project name and address on hover
+      const projectName = location.name || 'Project';
+      // Try to get address from project data if available
+      const projects = this.getProjectLocationMarkersFromLocalStorage();
+      const projectData = projects.find((p: any) => p.activityName === location.name);
+      const address = projectData?.locationName || projectData?.address || location.description || '';
+      const tooltipContent = address 
+        ? `<div style="text-align: left;"><strong>${projectName}</strong><br/><span style="font-size: 11px; opacity: 0.9;">${address}</span></div>`
+        : projectName;
+      marker.bindTooltip(tooltipContent, {
+        permanent: false,
+        direction: 'top',
+        offset: [0, -10],
+        className: 'marker-tooltip',
+        opacity: 0.9
+      });
+
+      // Add hover events for tooltip
+      marker.on('mouseover', () => {
+        marker.openTooltip();
+      });
+
+      marker.on('mouseout', () => {
+        marker.closeTooltip();
+      });
 
       // Add click event to marker
       marker.on('click', (e: any) => {

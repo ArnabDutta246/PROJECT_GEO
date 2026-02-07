@@ -554,7 +554,7 @@ export class MapForInsert implements AfterViewInit, OnDestroy {
   private locationPickerMarker: any = null;
   
   // Output event for location selection
-  @Output() locationSelected = new EventEmitter<{ latitude: number; longitude: number }>();
+  @Output() locationSelected = new EventEmitter<{ latitude: number; longitude: number; mouzaName?: string; districtName?: string }>();
 
   // Flag to track if a layer click just occurred (to prevent location picking on new selections)
   private layerClickJustHandled: boolean = false;
@@ -1648,6 +1648,54 @@ export class MapForInsert implements AfterViewInit, OnDestroy {
     return crossings % 2 === 1;
   }
 
+  // Find district for a given point
+  private findDistrictForPoint(point: { lat: number; lng: number }): string | null {
+    if (!this.districtData || !this.districtData.features) {
+      return null;
+    }
+
+    for (const feature of this.districtData.features) {
+      if (this.isPointInPolygon(point, feature)) {
+        return feature.properties["District N"] || feature.properties.district || null;
+      }
+    }
+
+    return null;
+  }
+
+  // Find mouza for a given point
+  private findMouzaForPoint(point: { lat: number; lng: number }, districtName: string | null): string | null {
+    if (!this.mouzaData || !this.mouzaData.features || !districtName) {
+      return null;
+    }
+
+    // First, find the district feature to filter mouzas
+    const districtFeature = this.districtData?.features?.find(
+      (f: any) => (f.properties["District N"] || f.properties.district) === districtName
+    );
+
+    if (!districtFeature) {
+      return null;
+    }
+
+    // Check each mouza to see if the point is inside it and also in the district
+    for (const mouzaFeature of this.mouzaData.features) {
+      // Check if mouza is in the district first (using centroid check)
+      const mouzaCentroid = this.getFeatureCentroid(mouzaFeature);
+      const centroidPoint = { lat: mouzaCentroid.lat, lng: mouzaCentroid.lng };
+      if (!this.isPointInPolygon(centroidPoint, districtFeature)) {
+        continue; // Skip mouzas not in this district
+      }
+
+      // Check if the point is in this mouza
+      if (this.isPointInPolygon(point, mouzaFeature)) {
+        return mouzaFeature.properties["Mouza Name"] || mouzaFeature.properties.subdistrict || null;
+      }
+    }
+
+    return null;
+  }
+
   private highlightMouza(feature: any, layer: any): void {
     this.clearMouzaHighlight();
 
@@ -2342,13 +2390,23 @@ export class MapForInsert implements AfterViewInit, OnDestroy {
       zIndexOffset: 10000
     }).addTo(this.map);
 
-    // Add popup with coordinates
-    this.locationPickerMarker.bindPopup(`
+    // Find district and mouza for the clicked location
+    const districtName = this.findDistrictForPoint({ lat, lng });
+    const mouzaName = this.findMouzaForPoint({ lat, lng }, districtName);
+
+    // Add popup with coordinates, district, and mouza
+    const popupContent = `
       <div style="text-align: center; padding: 5px;">
         <strong>Selected Location</strong><br>
-        <small>Lat: ${lat.toFixed(6)}<br>Lng: ${lng.toFixed(6)}</small>
+        <small>
+          Lat: ${lat.toFixed(6)}<br>
+          Lng: ${lng.toFixed(6)}<br>
+          ${districtName ? `<br><strong>District:</strong> ${districtName}` : ''}
+          ${mouzaName ? `<br><strong>Mouza:</strong> ${mouzaName}` : ''}
+        </small>
       </div>
-    `).openPopup();
+    `;
+    this.locationPickerMarker.bindPopup(popupContent).openPopup();
 
     // Store previous position for drag bounds checking
     let previousLatLng: any = null;
@@ -2405,22 +2463,42 @@ export class MapForInsert implements AfterViewInit, OnDestroy {
         }
       }
       
-      // Update popup with new coordinates
-      this.locationPickerMarker.setPopupContent(`
+      // Find district and mouza for the dragged location
+      const draggedDistrictName = this.findDistrictForPoint({ lat: newLat, lng: newLng });
+      const draggedMouzaName = this.findMouzaForPoint({ lat: newLat, lng: newLng }, draggedDistrictName);
+
+      // Update popup with new coordinates, district, and mouza
+      const updatedPopupContent = `
         <div style="text-align: center; padding: 5px;">
           <strong>Selected Location</strong><br>
-          <small>Lat: ${newLat.toFixed(6)}<br>Lng: ${newLng.toFixed(6)}</small>
+          <small>
+            Lat: ${newLat.toFixed(6)}<br>
+            Lng: ${newLng.toFixed(6)}<br>
+            ${draggedDistrictName ? `<br><strong>District:</strong> ${draggedDistrictName}` : ''}
+            ${draggedMouzaName ? `<br><strong>Mouza:</strong> ${draggedMouzaName}` : ''}
+          </small>
         </div>
-      `).openPopup();
+      `;
+      this.locationPickerMarker.setPopupContent(updatedPopupContent).openPopup();
 
-      // Emit updated coordinates
+      // Emit updated coordinates and mouza/district info
       this.ngZone.run(() => {
-        this.locationSelected.emit({ latitude: newLat, longitude: newLng });
+        this.locationSelected.emit({ 
+          latitude: newLat, 
+          longitude: newLng,
+          mouzaName: draggedMouzaName || undefined,
+          districtName: draggedDistrictName || undefined
+        });
       });
     });
 
-    // Emit coordinates to parent component
-    this.locationSelected.emit({ latitude: lat, longitude: lng });
+    // Emit coordinates and mouza/district info to parent component (districtName and mouzaName already found above)
+    this.locationSelected.emit({ 
+      latitude: lat, 
+      longitude: lng,
+      mouzaName: mouzaName || undefined,
+      districtName: districtName || undefined
+    });
 
     this.cdr.detectChanges();
   }

@@ -45,7 +45,8 @@
                     </button>
 
                     <button type="button" class="btn btn-success flex-grow-1" (click)="submitForm()">
-                        <i class="fa-solid fa-paper-plane me-1"></i>Submit Application
+                        <i class="fa-solid" [ngClass]="isEditMode ? 'fa-save me-1' : 'fa-paper-plane me-1'"></i>
+                        {{ isEditMode ? 'Update Project' : 'Submit Application' }}
                     </button>
                 </div>
 

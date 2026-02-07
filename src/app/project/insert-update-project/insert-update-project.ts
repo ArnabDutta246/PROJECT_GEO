@@ -42,6 +42,8 @@ interface FileWithPreview {
 export class InsertUpdateProject implements OnInit {
   currentStep: number = 1;
   totalSteps: number = 5;
+  isEditMode: boolean = false;
+  originalActivityName: string = ''; // Store original activityName to identify the project being edited
 
   formData = {
     projectName: '',
@@ -137,6 +139,10 @@ export class InsertUpdateProject implements OnInit {
   }
 
   private bindProjectData(project: IProjectData): void {
+    // Set edit mode and store original activity name for identification
+    this.isEditMode = true;
+    this.originalActivityName = project.activityName || '';
+
     // Bind project data to form
     if (project.projectName) {
       this.formData.projectName = project.projectName;
@@ -490,6 +496,9 @@ export class InsertUpdateProject implements OnInit {
       }
     });
 
+    this.isEditMode = false;
+    this.originalActivityName = '';
+
     this.formData = {
       projectName: '',
       activityName: '',
@@ -584,24 +593,55 @@ export class InsertUpdateProject implements OnInit {
     // Implement form submission logic here
     // Example: this.http.post('/api/submit', formDataToSubmit).subscribe(...)
 
-    alert('Application submitted successfully! Confirmation & verification will be done by the authority.');
+    // Store to localStorage (will handle both create and update)
     this.storeToLocalStorage();
   }
 
   storeToLocalStorage(): void {
-    // get already store data
+    // Get already stored data
     const existingData = localStorage.getItem('projectData');
-    let data = [];
+    let data: IProjectData[] = [];
+    
     if (existingData) {
       const existingDataObj = JSON.parse(existingData);
-      if(existingDataObj && existingDataObj.length>0){
-        existingDataObj.push(this.formData as any);
+      if (existingDataObj && existingDataObj.length > 0) {
         data = existingDataObj;
-      } else {
-        data = [ this.formData as any ] as any;
       }
     }
+
+    // Update projectName and schemeType with final values
+    this.formData.projectName = this.getFinalProjectName();
+    this.formData.schemeType = this.getFinalSchemeType();
+
+    if (this.isEditMode && this.originalActivityName) {
+      // Update existing project
+      const projectIndex = data.findIndex(
+        (p: IProjectData) => p.activityName === this.originalActivityName
+      );
+      
+      if (projectIndex !== -1) {
+        // Update existing project
+        data[projectIndex] = { ...this.formData as any };
+        console.log('Updated existing project:', this.originalActivityName);
+      } else {
+        // Project not found, add as new
+        data.push(this.formData as any);
+        console.log('Project not found, added as new');
+      }
+    } else {
+      // Add new project
+      data.push(this.formData as any);
+      console.log('Added new project');
+    }
+
     localStorage.setItem('projectData', JSON.stringify(data));
+    
+    // Show success message
+    const message = this.isEditMode 
+      ? 'Project updated successfully!' 
+      : 'Application submitted successfully! Confirmation & verification will be done by the authority.';
+    alert(message);
+    
     this.router.navigate(['/home']);
   }
 
@@ -684,10 +724,19 @@ export class InsertUpdateProject implements OnInit {
   }
 
   // Handle location selection from map
-  onLocationSelected(event: { latitude: number; longitude: number }): void {
+  onLocationSelected(event: { latitude: number; longitude: number; mouzaName?: string; districtName?: string }): void {
     console.log("data from map", event);
     this.formData.latitude = event.latitude;
     this.formData.longitude = event.longitude;
+    
+    // Auto-bind mouza and district if available
+    if (event.mouzaName) {
+      this.formData.mouzaName = event.mouzaName;
+    }
+    if (event.districtName) {
+      this.formData.districtName = event.districtName;
+    }
+    
     this.cdr.detectChanges();
   }
 

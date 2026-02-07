@@ -7,6 +7,7 @@ import { MapSelectionService } from '../map-selection.service';
 import { AuthService, IDefaultUser } from '../services/auth/auth';
 import { Router } from '@angular/router';
 import { IProjectData } from '../project/insert-update-project/insert-update-project';
+import { Project as ProjectService } from '../services/project/project';
 
 type ProjectDocument = {
   label: string;
@@ -57,15 +58,19 @@ export class Home implements OnInit, OnDestroy, AfterViewInit {
     private mapSelectionService: MapSelectionService,
     private authService: AuthService,
     private cdr: ChangeDetectorRef,
-    private router: Router
+    private router: Router,
+    private projectService: ProjectService
   ) { }
 
   async ngOnInit(): Promise<void> {
     if (isPlatformBrowser(this.platformId)) {
+      // Initialize dummy project data if localStorage is empty
+      this.projectService.initializeDummyData();
+      
       // Load user profile first
       this.getUserProfile();
       await this.loadData();
-      this.projects = this.getProjectsFromLocalStorage();
+      this.loadProjectsByUserRole();
     }
   }
 
@@ -451,7 +456,14 @@ export class Home implements OnInit, OnDestroy, AfterViewInit {
 
   protected projects: IProjectData[] = [];
 
-  //fetch projects from the local storage
+  //fetch projects from the local storage filtered by user role
+  private loadProjectsByUserRole(): void {
+    const user = this.authService.getCurrentLoginUser();
+    this.projects = this.projectService.getProjectsFromLocalStorageByUser(user);
+    console.log('Loaded projects for user role:', user?.role, '- Projects count:', this.projects.length);
+  }
+
+  //fetch projects from the local storage (legacy method - kept for compatibility)
   private getProjectsFromLocalStorage(): IProjectData[] {
     const projects = localStorage.getItem('projectData');
     if (projects) {
