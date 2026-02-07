@@ -1,4 +1,5 @@
-import { ChangeDetectorRef, Component, OnInit, signal, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, Inject, OnInit, PLATFORM_ID, signal, ViewChild } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { MapComponent } from '../../map/map';
@@ -114,7 +115,8 @@ export class InsertUpdateProject implements OnInit {
     private authService: AuthService,
     private mapSelectionService: MapSelectionService,
     private cdr: ChangeDetectorRef,
-    private router: Router
+    private router: Router,
+    @Inject(PLATFORM_ID) private platformId: Object
   ) {
     this.getUserProfile();
   }
@@ -125,6 +127,9 @@ export class InsertUpdateProject implements OnInit {
   }
 
   private loadProjectData(): void {
+    if (!isPlatformBrowser(this.platformId)) {
+      return;
+    }
     const projectDataStr = sessionStorage.getItem('selectedProjectData');
     if (projectDataStr) {
       try {
