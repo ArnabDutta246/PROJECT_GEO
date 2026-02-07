@@ -129,12 +129,12 @@
             <div class="col-md-9 p-0">
 
                 <div style="position: relative;">
-                    <div class="d-flex gap-2 justify-content-center align-items-center px-3 py-2 blurBgLayer" style="position: absolute; top: 10px; left: 0; right: 0;z-index: 999;width: fit-content;
+                    <div class="d-flex gap-2 justify-content-center align-items-center px-3 py-2 layer-control-bar" style="position: absolute; top: 10px; left: 0; right: 0;z-index: 999;width: fit-content;
     transform: translate(40%, 40%); ">
                         <button *ngFor="let layer of availableLayers()" class="btn btn-sm position-relative"
                             [class.text-light-Blue]="isLayerActive(layer.name)"
                             [class.bg-navbar]="isLayerActive(layer.name)"
-                            [class.text-light-Blue-placeholder]="!isLayerActive(layer.name)" (click)="switchLayer(layer.name)"
+                            [class.text-layer-control-inactive]="!isLayerActive(layer.name)" (click)="switchLayer(layer.name)"
                             [title]="layer.label">
                             <i class="fa-solid" [ngClass]="layer.icon"></i> {{ layer.label }}
                         </button>
