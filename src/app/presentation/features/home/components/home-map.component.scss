@@ -1,0 +1,81 @@
+:host {
+  display: block;
+  width: 100%;
+  height: 100%;
+  flex: 1;
+  min-height: 0;
+}
+
+.home-map-shell {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.home-map-container {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  z-index: 1;
+  background: #d8dadc;
+}
+
+:host ::ng-deep .leaflet-container {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  background: #d8dadc;
+}
+
+.map-overlay {
+  position: absolute;
+  z-index: 500;
+  pointer-events: none;
+}
+
+.map-overlay--loading {
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  background: rgba(15, 23, 42, 0.35);
+  color: #fff;
+}
+
+.map-overlay--error {
+  top: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #dc3545;
+  color: #fff;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  max-width: calc(100% - 2rem);
+}
+
+.map-overlay--empty {
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.82);
+  color: #fff;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+}
+
+:host ::ng-deep .project-pin-marker,
+:host ::ng-deep .project-pin-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #ff6b35;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
+}
+
+:host ::ng-deep .leaflet-tooltip {
+  font-size: 0.8rem;
+}

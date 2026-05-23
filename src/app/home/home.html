@@ -24,22 +24,39 @@
             </div>
         </div>
         <div class="col-md-3">
-            <select class="form-select form-select-sm" aria-label="Small select example">
-                <option selected>Arunachal Pradesh</option>
+            <select
+              class="form-select form-select-sm"
+              [ngModel]="facade.selectedStateId()"
+              (ngModelChange)="onStateChange($event)"
+              [disabled]="facade.stateLocked() || facade.filtersLoading()"
+              aria-label="Select State"
+            >
+              <option [ngValue]="null">Select State</option>
+              <option *ngFor="let state of facade.states()" [ngValue]="state.id">{{ state.label }}</option>
             </select>
         </div>
         <div class="col-md-3">
-            <select class="form-select form-select-sm" [(ngModel)]="selectedDistrict"
-                (ngModelChange)="onDistrictChange()" aria-label="Select District">
-                <option value="">Select District</option>
-                <option *ngFor="let district of districts()" [value]="district">{{ district }}</option>
+            <select
+              class="form-select form-select-sm"
+              [ngModel]="facade.selectedDistrictId()"
+              (ngModelChange)="onDistrictIdChange($event)"
+              [disabled]="!facade.selectedStateId() || facade.districtLocked() || facade.filtersLoading() || facade.districts().length === 0"
+              aria-label="Select District"
+            >
+                <option [ngValue]="null">Select District</option>
+                <option *ngFor="let district of facade.districts()" [ngValue]="district.id">{{ district.label }}</option>
             </select>
         </div>
         <div class="col-md-3  ">
-            <select class="form-select form-select-sm" [(ngModel)]="selectedMouza" (ngModelChange)="onMouzaChange()"
-                [disabled]="!selectedDistrict || mouzas().length === 0" aria-label="Select Block">
-                <option value="">Select Block</option>
-                <option *ngFor="let mouza of mouzas()" [value]="mouza">{{ mouza }}</option>
+            <select
+              class="form-select form-select-sm"
+              [ngModel]="facade.selectedBlockId()"
+              (ngModelChange)="onBlockIdChange($event)"
+              [disabled]="!facade.selectedDistrictId() || facade.blockLocked() || facade.filtersLoading() || facade.blocks().length === 0"
+              aria-label="Select Block"
+            >
+                <option [ngValue]="null">Select Block</option>
+                <option *ngFor="let block of facade.blocks()" [ngValue]="block.id">{{ block.label }}</option>
             </select>
         </div>
 

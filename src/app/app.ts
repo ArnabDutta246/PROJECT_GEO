@@ -1,4 +1,5 @@
-import { Component, signal, inject, OnInit } from '@angular/core';
+import { Component, signal, inject, OnInit, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { filter } from 'rxjs/operators';
@@ -6,6 +7,7 @@ import { ThemeService } from './theme.service';
 import { ThemeToggleComponent } from './theme-toggle/theme-toggle';
 import { Header } from "./header/header";
 import { PreLoaderComponent } from './pre-loader/pre-loader';
+import { AuthService } from './services/auth/auth';
 
 @Component({
   selector: 'app-root',
@@ -17,16 +19,17 @@ export class App implements OnInit {
   protected readonly title = signal('ProjectGeo');
   private themeService = inject(ThemeService);
   private router = inject(Router);
+  private authService = inject(AuthService);
+  private platformId = inject(PLATFORM_ID);
   showHeader = true;
 
   ngOnInit(): void {
-    // Theme service will automatically initialize and apply theme
-    // This injection ensures the service is instantiated
-    
-    // Check initial route
+    if (isPlatformBrowser(this.platformId)) {
+      this.authService.restoreSession();
+    }
+
     this.updateHeaderVisibility(this.router.url);
-    
-    // Listen to route changes
+
     this.router.events
       .pipe(filter(event => event instanceof NavigationEnd))
       .subscribe((event: any) => {
@@ -35,7 +38,6 @@ export class App implements OnInit {
   }
 
   private updateHeaderVisibility(url: string): void {
-    // Hide header on login page (empty path or '/login')
-    this.showHeader = !(url === '/' || url === '/login');
+    this.showHeader = !(url === '/' || url === '/login' || url === '/home' || url.startsWith('/home?'));
   }
 }

@@ -1,0 +1,260 @@
+import { Injectable, PLATFORM_ID, inject, signal } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+import { firstValueFrom } from 'rxjs';
+import { User } from '@domain/entities/user.entity';
+import { GeoBoundary } from '@domain/entities/geo-boundary.entity';
+import { UserRole } from '@domain/value-objects/role.enum';
+import { MapBounds } from '@domain/value-objects/map-bounds.vo';
+import { ProjectPin } from '@domain/value-objects/project-pin.vo';
+import { GetCurrentUserUseCase } from '@application/auth/get-current-user.use-case';
+import { LoadBlockBoundariesUseCase } from '@application/geo/load-block-boundaries.use-case';
+import { GetMappableProjectsUseCase } from '@application/map/get-mappable-projects.use-case';
+import { normalizeGeoName } from '@infrastructure/http/mappers/jurisdiction.mapper';
+import { MAP_ADAPTER } from '@infrastructure/tokens/repository.tokens';
+import {
+  BlockLayerInput,
+  MapAdapter,
+  ProjectMarkerInput,
+} from '@infrastructure/geo/map-adapter';
+import { MapSelectionStore } from '@presentation/state/map-selection.store';
+import { ProjectSummaryViewModel } from './models/project-summary.view-model';
+
+const AP_CENTER: [number, number] = [28.2, 94.5];
+const AP_DEFAULT_ZOOM = 8;
+
+@Injectable({ providedIn: 'root' })
+export class MapFacade {
+  readonly loading = signal(false);
+  readonly error = signal<string | null>(null);
+  readonly pins = signal<ProjectPin[]>([]);
+  readonly blockLayerReady = signal(false);
+  readonly summaryOpen = signal(false);
+  readonly selectedPinId = signal<string | null>(null);
+  readonly summary = signal<ProjectSummaryViewModel | null>(null);
+
+  private readonly platformId = inject(PLATFORM_ID);
+  private readonly mapAdapter = inject<MapAdapter>(MAP_ADAPTER);
+  private readonly mapSelectionStore = inject(MapSelectionStore);
+  private readonly getCurrentUser = inject(GetCurrentUserUseCase);
+  private readonly loadBlocks = inject(LoadBlockBoundariesUseCase);
+  private readonly getMappableProjects = inject(GetMappableProjectsUseCase);
+
+  private container: HTMLElement | null = null;
+  private initialized = false;
+  private currentBlocks: GeoBoundary[] = [];
+
+  async initialize(container: HTMLElement): Promise<void> {
+    if (!isPlatformBrowser(this.platformId)) {
+      return;
+    }
+
+    this.container = container;
+    this.loading.set(true);
+    this.error.set(null);
+
+    try {
+      await this.mapAdapter.initialize(container, {
+        center: AP_CENTER,
+        zoom: AP_DEFAULT_ZOOM,
+      });
+
+      this.mapAdapter.onMarkerClick((projectId) => this.openSummary(projectId));
+      this.initialized = true;
+      await this.refreshMap();
+    } catch (err) {
+      this.error.set(this.readError(err));
+    } finally {
+      this.loading.set(false);
+    }
+  }
+
+  async refreshMap(): Promise<void> {
+    if (!this.initialized || !isPlatformBrowser(this.platformId)) {
+      return;
+    }
+
+    const user = this.getCurrentUser.execute();
+    if (!user) {
+      this.pins.set([]);
+      this.mapAdapter.setProjectMarkers([]);
+      return;
+    }
+
+    this.loading.set(true);
+    this.error.set(null);
+
+    try {
+      const districtName = this.mapSelectionStore.selectedDistrictName();
+      const blockName = this.mapSelectionStore.selectedBlockName();
+      const scopedBlocks = await this.resolveBlocksForUser(user, districtName, blockName);
+      this.currentBlocks = scopedBlocks;
+      this.renderBlockLayer(scopedBlocks, blockName);
+      this.blockLayerReady.set(true);
+
+      const { pins } = await firstValueFrom(
+        this.getMappableProjects.execute({ districtName, blockName })
+      );
+      this.pins.set(pins);
+      this.renderMarkers(pins);
+      this.fitViewport(user, scopedBlocks);
+    } catch (err) {
+      this.error.set(this.readError(err));
+      this.mapAdapter.setProjectMarkers([]);
+    } finally {
+      this.loading.set(false);
+    }
+  }
+
+  focusProject(projectId: string): void {
+    const pin = this.pins().find((item) => item.id === projectId);
+    if (!pin) {
+      return;
+    }
+    this.mapAdapter.focusMarker(projectId);
+    this.openSummary(projectId);
+  }
+
+  focusLegacyProject(match: {
+    activityName: string;
+    locationName: string;
+    latitude?: number | null;
+    longitude?: number | null;
+  }): void {
+    const pin =
+      this.pins().find(
+        (item) =>
+          item.activityName === match.activityName &&
+          item.locationName === match.locationName
+      ) ??
+      this.pins().find(
+        (item) =>
+          match.latitude != null &&
+          match.longitude != null &&
+          item.coordinates.latitude === match.latitude &&
+          item.coordinates.longitude === match.longitude
+      );
+
+    if (pin) {
+      this.focusProject(pin.id);
+    }
+  }
+
+  closeSummary(): void {
+    this.summaryOpen.set(false);
+    this.selectedPinId.set(null);
+    this.summary.set(null);
+    this.mapSelectionStore.clearProjectSelection();
+  }
+
+  onFiltersChanged(): void {
+    if (this.summaryOpen()) {
+      this.closeSummary();
+    }
+    void this.refreshMap();
+  }
+
+  destroy(): void {
+    this.mapAdapter.destroy();
+    this.initialized = false;
+    this.container = null;
+    this.currentBlocks = [];
+  }
+
+  setBaseLayer(layerId: 'osm' | 'satellite'): void {
+    this.mapAdapter.setBaseLayer(layerId);
+  }
+
+  invalidateSize(): void {
+    this.mapAdapter.invalidateSize();
+  }
+
+  private openSummary(projectId: string): void {
+    const pin = this.pins().find((item) => item.id === projectId);
+    if (!pin) {
+      return;
+    }
+    this.selectedPinId.set(projectId);
+    this.summary.set(ProjectSummaryViewModel.fromPin(pin));
+    this.summaryOpen.set(true);
+    this.mapSelectionStore.selectProject(projectId);
+  }
+
+  private async resolveBlocksForUser(
+    user: User,
+    districtName: string | null,
+    blockName: string | null
+  ): Promise<GeoBoundary[]> {
+    let blocks = await firstValueFrom(this.loadBlocks.execute({ districtName, blockName }));
+
+    if (user.role === UserRole.DistrictManager) {
+      const allowedDistricts = user.jurisdiction.districts.filter((name) => name !== 'ALL');
+      blocks = blocks.filter((block) =>
+        allowedDistricts.some(
+          (district) => normalizeGeoName(district) === normalizeGeoName(block.districtName)
+        )
+      );
+    }
+
+    if (user.role === UserRole.BlockManager) {
+      const allowedBlocks = user.jurisdiction.blocks.filter((name) => name !== 'ALL');
+      blocks = blocks.filter((block) =>
+        allowedBlocks.some((name) => normalizeGeoName(name) === normalizeGeoName(block.name))
+      );
+    }
+
+    return blocks;
+  }
+
+  private renderBlockLayer(blocks: GeoBoundary[], selectedBlockName: string | null): void {
+    const selectedBlock = selectedBlockName
+      ? blocks.find((block) => normalizeGeoName(block.name) === normalizeGeoName(selectedBlockName))
+      : null;
+
+    const layerInput: BlockLayerInput[] = blocks.map((block) => ({
+      id: block.id,
+      geometry: block.geometry,
+      name: block.name,
+      districtName: block.districtName,
+      style: selectedBlock && block.id === selectedBlock.id ? 'highlight' : 'default',
+    }));
+
+    this.mapAdapter.setBlockLayer(layerInput);
+    this.mapAdapter.highlightBlock(selectedBlock?.id ?? null);
+  }
+
+  private renderMarkers(pins: ProjectPin[]): void {
+    const markers: ProjectMarkerInput[] = pins.map((pin) => ({
+      id: pin.id,
+      latitude: pin.coordinates.latitude,
+      longitude: pin.coordinates.longitude,
+      label: pin.projectName,
+      tooltip: pin.locationName.trim()
+        ? `${pin.projectName} — ${pin.locationName}`
+        : `${pin.projectName} — Location unavailable`,
+    }));
+    this.mapAdapter.setProjectMarkers(markers);
+  }
+
+  private fitViewport(user: User, blocks: GeoBoundary[]): void {
+    const bounds = MapBounds.fromGeoBoundaries(blocks);
+    if (bounds) {
+      this.mapAdapter.fitBounds({
+        southWest: [bounds.southWest.latitude, bounds.southWest.longitude],
+        northEast: [bounds.northEast.latitude, bounds.northEast.longitude],
+      });
+    } else {
+      this.mapAdapter.fitBounds({
+        southWest: [26.5, 91.5],
+        northEast: [29.5, 97.5],
+      });
+    }
+    this.mapAdapter.invalidateSize();
+  }
+
+  private readError(error: unknown): string {
+    if (error instanceof Error) {
+      return error.message;
+    }
+    return 'Unable to load map data.';
+  }
+}

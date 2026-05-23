@@ -1,0 +1,119 @@
+<div class="login-page">
+  <div class="login-stack">
+    <header class="login-branding">
+      <div class="logo-box" aria-hidden="true">
+        <span class="material-icons">public</span>
+      </div>
+      <h1 class="portal-title">Geospatial Project Portal</h1>
+      <p class="portal-subtitle">Government Engineering Division</p>
+    </header>
+
+    <section class="login-card" aria-labelledby="sign-in-heading">
+      <div class="card-header">
+        <h2 id="sign-in-heading">Sign In</h2>
+        <p>Enter your credentials to access the geospatial workspace.</p>
+      </div>
+
+      <form (ngSubmit)="onSubmit()" #loginForm="ngForm" class="login-form" novalidate>
+        <div class="form-field">
+          <label for="userId">User ID</label>
+          <div class="input-wrapper">
+            <span class="material-icons input-icon" aria-hidden="true">badge</span>
+            <input
+              type="text"
+              id="userId"
+              name="userId"
+              [ngModel]="presenter.userId()"
+              (ngModelChange)="presenter.userId.set($event)"
+              #userIdInput="ngModel"
+              required
+              autocomplete="username"
+              class="form-control"
+              placeholder="Enter your user ID"
+              [class.is-invalid]="userIdInput.invalid && userIdInput.touched"
+            />
+          </div>
+          @if (userIdInput.invalid && userIdInput.touched) {
+            <span class="field-error">User ID is required</span>
+          }
+        </div>
+
+        <div class="form-field">
+          <div class="password-label-row">
+            <label for="password">Password</label>
+            <button type="button" class="forgot-link">Forgot password?</button>
+          </div>
+          <div class="input-wrapper">
+            <span class="material-icons input-icon" aria-hidden="true">lock</span>
+            <input
+              [type]="presenter.showPassword() ? 'text' : 'password'"
+              id="password"
+              name="password"
+              [ngModel]="presenter.password()"
+              (ngModelChange)="presenter.password.set($event)"
+              #passwordInput="ngModel"
+              required
+              autocomplete="current-password"
+              class="form-control has-toggle"
+              placeholder="Enter your password"
+              [class.is-invalid]="passwordInput.invalid && passwordInput.touched"
+            />
+            <button
+              type="button"
+              class="visibility-toggle"
+              (click)="togglePasswordVisibility()"
+              [attr.aria-label]="presenter.showPassword() ? 'Hide password' : 'Show password'"
+            >
+              <span class="material-icons">{{
+                presenter.showPassword() ? 'visibility_off' : 'visibility'
+              }}</span>
+            </button>
+          </div>
+          @if (passwordInput.invalid && passwordInput.touched) {
+            <span class="field-error">Password is required</span>
+          }
+        </div>
+
+        @if (presenter.errorMessage()) {
+          <div class="form-error" role="alert">
+            {{ presenter.errorMessage() }}
+          </div>
+        }
+
+        <button
+          type="submit"
+          class="btn-sign-in"
+          [disabled]="loginForm.invalid || presenter.isLoading()"
+        >
+          @if (!presenter.isLoading()) {
+            <span>Sign In</span>
+            <span class="material-icons" aria-hidden="true">arrow_forward</span>
+          } @else {
+            <span class="loading-spinner" aria-hidden="true"></span>
+            <span>Signing in...</span>
+          }
+        </button>
+      </form>
+
+      <div class="card-footer">
+        <p>Secure Access System.</p>
+        <p>Authorized Personnel Only.</p>
+      </div>
+    </section>
+
+    <footer class="page-footer">
+      <a href="#" class="footer-link" (click)="$event.preventDefault()">
+        <span class="material-icons" aria-hidden="true">help</span>
+        <span>Support</span>
+      </a>
+      <a href="#" class="footer-link" (click)="$event.preventDefault()">
+        <span class="material-icons" aria-hidden="true">policy</span>
+        <span>Privacy Policy</span>
+      </a>
+      <a href="#" class="footer-link" (click)="$event.preventDefault()">
+        <span class="material-icons" aria-hidden="true">gavel</span>
+        <span>Terms of Service</span>
+      </a>
+    </footer>
+  </div>
+</div>

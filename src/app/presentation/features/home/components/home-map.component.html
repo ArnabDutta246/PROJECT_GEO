@@ -1,0 +1,24 @@
+<div class="home-map-shell">
+  @if (mapFacade.loading()) {
+    <div class="map-overlay map-overlay--loading" aria-live="polite">
+      <div class="spinner-border text-light" role="status">
+        <span class="visually-hidden">Loading map...</span>
+      </div>
+      <span>Loading map...</span>
+    </div>
+  }
+
+  @if (mapFacade.error()) {
+    <div class="map-overlay map-overlay--error" role="alert">
+      {{ mapFacade.error() }}
+    </div>
+  }
+
+  @if (mapFacade.blockLayerReady() && mapFacade.pins().length === 0 && !mapFacade.loading()) {
+    <div class="map-overlay map-overlay--empty">
+      No projects with map locations in this area.
+    </div>
+  }
+
+  <div #mapContainer class="home-map-container" aria-label="Interactive project map"></div>
+</div>

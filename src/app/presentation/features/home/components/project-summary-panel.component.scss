@@ -1,0 +1,62 @@
+.project-summary-panel {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 600;
+  width: min(360px, calc(100% - 2rem));
+  background: rgba(15, 23, 42, 0.94);
+  color: #f8fafc;
+  border-radius: 0.75rem;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+  overflow: hidden;
+}
+
+.project-summary-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1rem 0.75rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.project-summary-panel__header h2 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.project-summary-panel__body {
+  margin: 0;
+  padding: 0.75rem 1rem 1rem;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.project-summary-panel__body div {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.project-summary-panel__body dt {
+  margin: 0;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #94a3b8;
+}
+
+.project-summary-panel__body dd {
+  margin: 0;
+  font-size: 0.92rem;
+}
+
+.icon-btn {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}

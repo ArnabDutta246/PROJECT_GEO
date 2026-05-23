@@ -1,0 +1,231 @@
+<div class="home-dashboard">
+  <aside class="nav-rail" aria-label="Primary navigation">
+    <span class="material-icons nav-logo">map</span>
+    <nav class="nav-rail-items">
+      <button type="button" class="nav-rail-btn active" aria-label="Map view">
+        <span class="material-icons">map</span>
+      </button>
+      <button type="button" class="nav-rail-btn" aria-label="Layers">
+        <span class="material-icons">layers</span>
+      </button>
+      <button type="button" class="nav-rail-btn" aria-label="Analytics">
+        <span class="material-icons">bar_chart</span>
+      </button>
+      <button type="button" class="nav-rail-btn" aria-label="Documents">
+        <span class="material-icons">description</span>
+      </button>
+      <button type="button" class="nav-rail-btn" aria-label="Settings">
+        <span class="material-icons">settings</span>
+      </button>
+    </nav>
+    <div class="nav-rail-footer">
+      <button type="button" class="nav-rail-btn" aria-label="Help">
+        <span class="material-icons">help</span>
+      </button>
+      <button type="button" class="nav-rail-btn" aria-label="Account">
+        <span class="material-icons">account_circle</span>
+      </button>
+    </div>
+  </aside>
+
+  <div class="home-main">
+    <header class="home-topbar">
+      <div class="topbar-left">
+        <h1 class="portal-title">Geospatial Project Portal</h1>
+        <div class="filter-group">
+          <div class="filter-item">
+            <span class="filter-label">Geographic Level</span>
+            <select
+              class="filter-value-select"
+              [ngModel]="facade.selectedStateId()"
+              (ngModelChange)="onStateChange($event)"
+              [disabled]="facade.stateLocked() || facade.filtersLoading()"
+            >
+              <option [ngValue]="null">State</option>
+              <option *ngFor="let state of facade.states()" [ngValue]="state.id">{{ state.label }}</option>
+            </select>
+          </div>
+          <span class="filter-divider"></span>
+          <div class="filter-item">
+            <span class="filter-label">Region</span>
+            <select
+              class="filter-value-select"
+              [ngModel]="facade.selectedDistrictId()"
+              (ngModelChange)="onDistrictIdChange($event)"
+              [disabled]="!facade.selectedStateId() || facade.districtLocked() || facade.filtersLoading()"
+            >
+              <option [ngValue]="null">All</option>
+              <option *ngFor="let district of facade.districts()" [ngValue]="district.id">{{ district.label }}</option>
+            </select>
+          </div>
+          <span class="filter-divider"></span>
+          <div class="filter-item">
+            <span class="filter-label">Block</span>
+            <select
+              class="filter-value-select"
+              [ngModel]="facade.selectedBlockId()"
+              (ngModelChange)="onBlockIdChange($event)"
+              [disabled]="!facade.selectedDistrictId() || facade.blockLocked() || facade.filtersLoading()"
+            >
+              <option [ngValue]="null">All</option>
+              <option *ngFor="let block of facade.blocks()" [ngValue]="block.id">{{ block.label }}</option>
+            </select>
+          </div>
+          <span class="filter-divider"></span>
+          <div class="filter-item">
+            <span class="filter-label">Year</span>
+            <select class="filter-value-select" [(ngModel)]="selectedYear">
+              <option value="2024">2024</option>
+              <option value="2025">2025</option>
+            </select>
+          </div>
+          <span class="filter-divider"></span>
+          <div class="filter-item">
+            <span class="filter-label">Project Type</span>
+            <select class="filter-value-select" [(ngModel)]="selectedProjectType">
+              <option value="All">All</option>
+            </select>
+          </div>
+          <span class="filter-divider"></span>
+          <div class="filter-item">
+            <span class="filter-label">Status</span>
+            <select class="filter-value-select" [(ngModel)]="selectedStatus">
+              <option value="Active">Active</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <label class="global-search">
+        <span class="material-icons">search</span>
+        <input type="search" placeholder="Global search..." [(ngModel)]="globalSearchTerm" />
+      </label>
+    </header>
+
+    <div class="home-body">
+      <aside class="home-sidebar">
+        <div class="sidebar-projects">
+          <div class="sidebar-search-wrap">
+            <label class="sidebar-search">
+              <span class="material-icons">search</span>
+              <input type="search" placeholder="Search projects..." [(ngModel)]="searchTerm" />
+            </label>
+          </div>
+          <div class="sidebar-section-header">
+            <span>Projects</span>
+            <span class="material-icons">filter_list</span>
+          </div>
+          <div class="project-list">
+            @if (filteredProjects.length) {
+              @for (project of filteredProjects; track project.activityName + project.locationName) {
+                <button
+                  type="button"
+                  class="project-list-item"
+                  [class.selected]="isProjectSelected(project)"
+                  (click)="selectProject(project)"
+                >
+                  <span
+                    class="project-icon"
+                    [style.background-color]="getSchemeColor(project.schemeType)"
+                  >
+                    <span class="material-icons">{{ getSchemeIcon(project.schemeType) }}</span>
+                  </span>
+                  <span class="project-copy">
+                    <span class="project-name">{{ project.activityName }}</span>
+                    <span class="project-address">{{ project.locationName }}</span>
+                  </span>
+                </button>
+              }
+            } @else {
+              <p class="empty-state">No projects match your filters.</p>
+            }
+          </div>
+        </div>
+
+        <div class="sidebar-stats">
+          <h2>Regional Statistics</h2>
+          <section class="stat-block">
+            <h3>Male/Female Population</h3>
+            <div class="population-chart">
+              <div class="population-bar">
+                <div class="bar male" style="height: 52%"></div>
+                <span>MALE (52%)</span>
+              </div>
+              <div class="population-bar">
+                <div class="bar female" style="height: 48%"></div>
+                <span>FEMALE (48%)</span>
+              </div>
+            </div>
+          </section>
+          <section class="stat-block">
+            <h3>Caste Comparison</h3>
+            <div class="progress-row">
+              <div class="progress-label"><span>General</span><span>45%</span></div>
+              <div class="progress-track"><div class="progress-fill" style="width: 45%"></div></div>
+            </div>
+            <div class="progress-row">
+              <div class="progress-label"><span>OBC</span><span>32%</span></div>
+              <div class="progress-track"><div class="progress-fill" style="width: 32%"></div></div>
+            </div>
+            <div class="progress-row">
+              <div class="progress-label"><span>SC/ST</span><span>23%</span></div>
+              <div class="progress-track"><div class="progress-fill" style="width: 23%"></div></div>
+            </div>
+          </section>
+          <section class="stat-block">
+            <h3>Water Reports</h3>
+            <div class="chart-placeholder"></div>
+            <div class="chart-axis">
+              <span>JAN</span><span>MAR</span><span>MAY</span><span>JUL</span>
+            </div>
+          </section>
+          <section class="stat-block">
+            <h3>Soil &amp; Weather Overview</h3>
+            <div class="metric-grid">
+              <div class="metric-card">
+                <span class="material-icons">grass</span>
+                <div>
+                  <span class="metric-label">Soil Health</span>
+                  <strong>7.2 pH</strong>
+                </div>
+              </div>
+              <div class="metric-card">
+                <span class="material-icons">thermostat</span>
+                <div>
+                  <span class="metric-label">Weather</span>
+                  <strong>28°C / 64%</strong>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </aside>
+
+      <section class="map-workspace">
+        <div class="map-layer-switcher">
+          @for (layer of availableLayers(); track layer.name) {
+            <button
+              type="button"
+              class="layer-btn"
+              [class.active]="isLayerActive(layer.name)"
+              (click)="switchLayer(layer.name)"
+            >
+              {{ layer.label }}
+            </button>
+          }
+        </div>
+
+        <app-home-map></app-home-map>
+
+        <app-project-summary-panel
+          [open]="facade.mapFacadeRef.summaryOpen()"
+          [summary]="facade.mapFacadeRef.summary()"
+          (closed)="closeSummary()"
+        ></app-project-summary-panel>
+
+        <button type="button" class="map-fab" aria-label="Map tools">
+          <span class="material-icons">directions_car</span>
+        </button>
+      </section>
+    </div>
+  </div>
+</div>
