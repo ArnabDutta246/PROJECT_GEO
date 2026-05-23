@@ -109,11 +109,15 @@ export class LeafletMapAdapter extends MapAdapter {
     const useCompactMarkers = markers.length > 50;
 
     markers.forEach((marker) => {
+      const iconSize = useCompactMarkers ? 26 : 36;
+      const iconClass = useCompactMarkers ? 'project-pin-compact' : 'project-map-pin';
       const icon = this.L!.divIcon({
-        className: useCompactMarkers ? 'project-pin-compact' : 'project-map-pin',
-        html: '<div class="project-pin-marker"></div>',
-        iconSize: useCompactMarkers ? [10, 10] : [14, 14],
-        iconAnchor: useCompactMarkers ? [5, 5] : [7, 7],
+        className: iconClass,
+        html: `<div class="project-pin-marker" style="background-color:${marker.color};">
+          <span class="material-icons project-pin-icon">${marker.materialIcon}</span>
+        </div>`,
+        iconSize: [iconSize, iconSize],
+        iconAnchor: [iconSize / 2, iconSize / 2],
       });
 
       const leafletMarker = this.L!.marker([marker.latitude, marker.longitude], { icon });

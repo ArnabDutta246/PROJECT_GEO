@@ -11,6 +11,12 @@ import { GetAreaSummaryUseCase } from '@application/analytics/get-area-summary.u
 import { GetCurrentUserUseCase } from '@application/auth/get-current-user.use-case';
 import { LoadBlockBoundariesUseCase } from '@application/geo/load-block-boundaries.use-case';
 import { GetMappableProjectsUseCase } from '@application/map/get-mappable-projects.use-case';
+import {
+  getSchemeTypeColor,
+  getSchemeTypeMaterialIcon,
+  getSchemeTypeLabel,
+  matchesSchemeTypeFilter,
+} from '@domain/catalog/scheme-type.catalog';
 import { normalizeGeoName } from '@infrastructure/http/mappers/jurisdiction.mapper';
 import { MAP_ADAPTER } from '@infrastructure/tokens/repository.tokens';
 import {
@@ -52,6 +58,7 @@ export class MapFacade {
   private container: HTMLElement | null = null;
   private initialized = false;
   private currentBlocks: GeoBoundary[] = [];
+  private allPins: ProjectPin[] = [];
 
   async initialize(container: HTMLElement): Promise<void> {
     if (!isPlatformBrowser(this.platformId)) {
@@ -114,8 +121,8 @@ export class MapFacade {
       const { pins } = await firstValueFrom(
         this.getMappableProjects.execute({ districtName, blockName })
       );
-      this.pins.set(pins);
-      this.renderMarkers(pins);
+      this.allPins = pins;
+      this.applySchemeTypeFilter();
       this.fitViewport(user, scopedBlocks);
     } catch (err) {
       this.error.set(this.readError(err));
@@ -179,6 +186,16 @@ export class MapFacade {
       this.closeAreaSummary();
     }
     void this.refreshMap();
+  }
+
+  onSchemeTypeFilterChanged(): void {
+    this.applySchemeTypeFilter();
+    if (this.summaryOpen()) {
+      const selectedId = this.selectedPinId();
+      if (selectedId && !this.pins().some((pin) => pin.id === selectedId)) {
+        this.closeSummary();
+      }
+    }
   }
 
   destroy(): void {
@@ -305,16 +322,33 @@ export class MapFacade {
   }
 
   private renderMarkers(pins: ProjectPin[]): void {
-    const markers: ProjectMarkerInput[] = pins.map((pin) => ({
-      id: pin.id,
-      latitude: pin.coordinates.latitude,
-      longitude: pin.coordinates.longitude,
-      label: pin.projectName,
-      tooltip: pin.locationName.trim()
-        ? `${pin.projectName} — ${pin.locationName}`
-        : `${pin.projectName} — Location unavailable`,
-    }));
+    const markers: ProjectMarkerInput[] = pins.map((pin) => {
+      const schemeLabel = getSchemeTypeLabel(pin.schemeType);
+      const locationSuffix = pin.locationName.trim()
+        ? pin.locationName
+        : 'Location unavailable';
+
+      return {
+        id: pin.id,
+        latitude: pin.coordinates.latitude,
+        longitude: pin.coordinates.longitude,
+        label: pin.projectName,
+        tooltip: `${pin.projectName} — ${locationSuffix} (${schemeLabel})`,
+        schemeType: pin.schemeType,
+        materialIcon: getSchemeTypeMaterialIcon(pin.schemeType),
+        color: getSchemeTypeColor(pin.schemeType),
+      };
+    });
     this.mapAdapter.setProjectMarkers(markers);
+  }
+
+  private applySchemeTypeFilter(): void {
+    const schemeFilter = this.mapSelectionStore.selectedSchemeType();
+    const filtered = this.allPins.filter((pin) =>
+      matchesSchemeTypeFilter(pin.schemeType, schemeFilter)
+    );
+    this.pins.set(filtered);
+    this.renderMarkers(filtered);
   }
 
   private fitViewport(user: User, blocks: GeoBoundary[]): void {

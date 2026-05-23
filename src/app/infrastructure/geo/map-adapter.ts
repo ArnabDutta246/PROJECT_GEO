@@ -13,6 +13,9 @@ export interface ProjectMarkerInput {
   longitude: number;
   label: string;
   tooltip: string;
+  schemeType: string;
+  materialIcon: string;
+  color: string;
 }
 
 export interface BlockLayerInput {

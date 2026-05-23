@@ -36,7 +36,7 @@ So that [business value]
 |---------|-----------|-------|---------|
 | E-01 | Authentication & Session | Phase 1 | US-01, US-01a, US-01b |
 | E-02 | Jurisdiction & Dashboard Filters | Phase 1 | US-02, US-02a, US-02b, US-02c |
-| E-03 | Map & Geo Visualization | Phase 1 | US-03, US-03a, US-03b, US-03c |
+| E-03 | Map & Geo Visualization | Phase 1 | US-03, US-03a, US-03b, US-03c, US-03d |
 | E-04 | Area Analytics & Reports | Phase 2 | US-04, US-04a, US-04b |
 | E-05 | Project Management | Phase 2–3 | US-05, US-05a, US-05b, US-05c |
 | E-06 | API Integration & Platform | Phase 1–4 | US-06, US-06a, US-06b |
@@ -59,6 +59,7 @@ So that [business value]
 | US-03a | District & block boundary layers | All users | P1 | E-03 | FR-MAP-02–04, 10 |
 | US-03b | Project detail panel on pin click | All users | P1 | E-03 | FR-MAP-06 |
 | US-03c | Map layer switcher | All users | P2 | E-03 | FR-DASH-09 |
+| US-03d | Scheme type icons & map quick filter | All users | P1 | E-03 | FR-MAP-05, FR-DASH-06 |
 | US-04 | Area summary on geographic click | All users | P1 | E-04 | FR-ANLY-01–08 |
 | US-04a | Gender & caste charts | All users | P1 | E-04 | FR-ANLY-02–03 |
 | US-04b | Water & soil reports | All users | P1 | E-04 | FR-ANLY-04–05 |
@@ -317,6 +318,64 @@ So that [business value]
 1. **Given** I am on the dashboard map, **When** I select **Satellite**, **Then** the basemap switches without clearing project pins or boundary layers.
 
 2. **Given** I switch layers, **When** the new layer loads, **Then** the current zoom and center are preserved.
+
+---
+
+#### US-03d — Scheme Type Icons & Map Quick Filter (P1)
+
+**As an** authorized user  
+**I want to** filter projects by scheme type using icon chips on the dashboard map and see matching icons on map pins  
+**So that** I can quickly identify and focus on the project types relevant to my monitoring work
+
+**Applies to:** All roles (filtered pins respect jurisdiction scope)
+
+**Why this priority:** Scheme-type visual identification is core to statewide scheme monitoring; officials need at-a-glance differentiation on the map and in the sidebar without reading every label.
+
+**Independent Delivery:** Map toolbar shows scheme-type icon filters; pins and sidebar list use the same icon/color per type; selecting a type filters visible pins and sidebar projects.
+
+**Maps to:** FR-MAP-05, FR-MAP-09 (partial), FR-DASH-06 (partial), FR-PROJ-10 (catalog alignment)
+
+**Shared catalog:** All screens MUST use the canonical scheme-type catalog at `src/app/domain/catalog/scheme-type.catalog.ts` (labels, Material Icons, colors). Project form (`insert-update-project`) dropdown values MUST match catalog labels.
+
+**Scheme type catalog (authoritative labels):**
+
+| Scheme Type | Material Icon | Color | Use |
+|-------------|---------------|-------|-----|
+| Construction / Civil Work | `construction` | `#004ac6` | Filter chip + map pin |
+| Plantation | `park` | `#2e7d32` | Filter chip + map pin |
+| Production System | `precision_manufacturing` | `#6a1b9a` | Filter chip + map pin |
+| Water Supply | `water_drop` | `#515f74` | Filter chip + map pin |
+| Sewage / Drainage System | `plumbing` | `#00838f` | Filter chip + map pin |
+| Waste Management | `recycling` | `#558b2f` | Filter chip + map pin |
+| Financial Assistance / Loan | `account_balance` | `#1565c0` | Filter chip + map pin |
+| Transport & Infrastructure | `directions_car` | `#455a64` | Filter chip + map pin |
+| Skills & Workforce Development | `school` | `#f57c00` | Filter chip + map pin |
+| Surface Mining | `landscape` | `#795548` | Filter chip + map pin |
+| Misc. (Create new) | `category` | `#757575` | Default for custom/unknown types |
+
+**Acceptance scenarios:**
+
+1. **Given** I am on `/home`, **When** the map loads, **Then** I see a scheme-type quick-filter bar (icon chips with labels or tooltips) for all catalog types plus an **All** option.
+
+2. **Given** project pins are visible, **When** I view a pin, **Then** its marker icon and color match the scheme type's catalog entry (same icon as sidebar project list).
+
+3. **Given** I tap a scheme-type filter chip (e.g. **Water Supply**), **When** the filter applies, **Then** only pins and sidebar projects of that type remain visible within my jurisdiction scope.
+
+4. **Given** a scheme-type filter is active, **When** I select **All** or clear the filter, **Then** all in-scope projects reappear on the map and sidebar.
+
+5. **Given** a project has a custom scheme type not in the catalog, **When** it renders, **Then** it uses the **Misc.** icon and color fallback without breaking the map.
+
+6. **Given** I combine scheme-type filter with district/block dropdown filters, **When** both are active, **Then** results reflect the intersection of geographic and scheme-type scope.
+
+7. **Given** I hover a map pin, **When** the tooltip opens, **Then** it shows project name, location, and scheme type label.
+
+**Journey continuation:** Login → home dashboard → filter by **Transport & Infrastructure** → map shows only road/bridge pins with car icon → click pin for project detail (US-03b).
+
+**Implementation notes:**
+
+- Replace ad-hoc `getSchemeIcon()` / `getSchemeColor()` helpers with `resolveSchemeType()` from the shared catalog.
+- `LeafletMapAdapter` pin rendering MUST use catalog `materialIcon` + `color` (Material icon rendered inside divIcon or equivalent).
+- Quick-filter UI placement: map workspace toolbar (alongside or below base layer switcher) or top filter row — must not obscure map controls.
 
 ---
 
@@ -640,7 +699,7 @@ A user story is **Done** when:
 | Stories | Deliverable |
 |---------|-------------|
 | US-02, US-02a, US-02b | Role-scoped home dashboard |
-| US-03, US-03a, US-03b | Leaflet map, boundaries, project pins, detail panel |
+| US-03, US-03a, US-03b, US-03d | Leaflet map, boundaries, typed pins, scheme filter |
 
 ### Sprint 3 — Analytics (P1)
 
@@ -670,6 +729,7 @@ A user story is **Done** when:
 | US-01 | FR-AUTH-01–06 | SC-02 |
 | US-02, US-02a, US-02b | FR-DASH-01–04 | SC-01 |
 | US-03 | FR-MAP-01, 05–08 | SC-03 |
+| US-03d | FR-MAP-05, FR-DASH-06 | SC-03 |
 | US-04 | FR-ANLY-01–08 | SC-04 |
 | US-05 | FR-PROJ-01–08 | SC-05 |
 | US-06 | FR-API-01–04 | SC-06 |

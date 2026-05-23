@@ -30,75 +30,71 @@
 
   <div class="home-main">
     <header class="home-topbar">
-      <div class="topbar-left">
-        <h1 class="portal-title">Geospatial Project Portal</h1>
-        <div class="filter-group">
-          <div class="filter-item">
-            <span class="filter-label">Geographic Level</span>
-            <select
-              class="filter-value-select"
-              [ngModel]="facade.selectedStateId()"
-              (ngModelChange)="onStateChange($event)"
-              [disabled]="facade.stateLocked() || facade.filtersLoading()"
-            >
-              <option [ngValue]="null">State</option>
-              <option *ngFor="let state of facade.states()" [ngValue]="state.id">{{ state.label }}</option>
-            </select>
-          </div>
-          <span class="filter-divider"></span>
-          <div class="filter-item">
-            <span class="filter-label">Region</span>
-            <select
-              class="filter-value-select"
-              [ngModel]="facade.selectedDistrictId()"
-              (ngModelChange)="onDistrictIdChange($event)"
-              [disabled]="!facade.selectedStateId() || facade.districtLocked() || facade.filtersLoading()"
-            >
-              <option [ngValue]="null">All</option>
-              <option *ngFor="let district of facade.districts()" [ngValue]="district.id">{{ district.label }}</option>
-            </select>
-          </div>
-          <span class="filter-divider"></span>
-          <div class="filter-item">
-            <span class="filter-label">Block</span>
-            <select
-              class="filter-value-select"
-              [ngModel]="facade.selectedBlockId()"
-              (ngModelChange)="onBlockIdChange($event)"
-              [disabled]="!facade.selectedDistrictId() || facade.blockLocked() || facade.filtersLoading()"
-            >
-              <option [ngValue]="null">All</option>
-              <option *ngFor="let block of facade.blocks()" [ngValue]="block.id">{{ block.label }}</option>
-            </select>
-          </div>
-          <span class="filter-divider"></span>
-          <div class="filter-item">
-            <span class="filter-label">Year</span>
-            <select class="filter-value-select" [(ngModel)]="selectedYear">
-              <option value="2024">2024</option>
-              <option value="2025">2025</option>
-            </select>
-          </div>
-          <span class="filter-divider"></span>
-          <div class="filter-item">
-            <span class="filter-label">Project Type</span>
-            <select class="filter-value-select" [(ngModel)]="selectedProjectType">
-              <option value="All">All</option>
-            </select>
-          </div>
-          <span class="filter-divider"></span>
-          <div class="filter-item">
-            <span class="filter-label">Status</span>
-            <select class="filter-value-select" [(ngModel)]="selectedStatus">
-              <option value="Active">Active</option>
-            </select>
-          </div>
+      <h1 class="portal-title">webgap</h1>
+      <div class="filter-group">
+        <div class="filter-item">
+          <span class="filter-label">Geographic Level</span>
+          <select
+            class="filter-value-select"
+            [ngModel]="facade.selectedStateId()"
+            (ngModelChange)="onStateChange($event)"
+            [disabled]="facade.stateLocked() || facade.filtersLoading()"
+          >
+            <option [ngValue]="null">State</option>
+            <option *ngFor="let state of facade.states()" [ngValue]="state.id">{{ state.label }}</option>
+          </select>
+        </div>
+        <div class="filter-item">
+          <span class="filter-label">Region</span>
+          <select
+            class="filter-value-select"
+            [ngModel]="facade.selectedDistrictId()"
+            (ngModelChange)="onDistrictIdChange($event)"
+            [disabled]="!facade.selectedStateId() || facade.districtLocked() || facade.filtersLoading()"
+          >
+            <option [ngValue]="null">All</option>
+            <option *ngFor="let district of facade.districts()" [ngValue]="district.id">{{ district.label }}</option>
+          </select>
+        </div>
+        <div class="filter-item">
+          <span class="filter-label">Block</span>
+          <select
+            class="filter-value-select"
+            [ngModel]="facade.selectedBlockId()"
+            (ngModelChange)="onBlockIdChange($event)"
+            [disabled]="!facade.selectedDistrictId() || facade.blockLocked() || facade.filtersLoading()"
+          >
+            <option [ngValue]="null">All</option>
+            <option *ngFor="let block of facade.blocks()" [ngValue]="block.id">{{ block.label }}</option>
+          </select>
+        </div>
+        <div class="filter-item">
+          <span class="filter-label">Year</span>
+          <select class="filter-value-select" [(ngModel)]="selectedYear">
+            <option value="2024">2024</option>
+            <option value="2025">2025</option>
+          </select>
+        </div>
+        <div class="filter-item">
+          <span class="filter-label">Project Type</span>
+          <select
+            class="filter-value-select"
+            [ngModel]="facade.selectedSchemeType()"
+            (ngModelChange)="onSchemeTypeFilter($event)"
+          >
+            <option [ngValue]="null">All</option>
+            @for (scheme of schemeTypeCatalog; track scheme.label) {
+              <option [ngValue]="scheme.label">{{ scheme.label }}</option>
+            }
+          </select>
+        </div>
+        <div class="filter-item">
+          <span class="filter-label">Status</span>
+          <select class="filter-value-select" [(ngModel)]="selectedStatus">
+            <option value="Active">Active</option>
+          </select>
         </div>
       </div>
-      <label class="global-search">
-        <span class="material-icons">search</span>
-        <input type="search" placeholder="Global search..." [(ngModel)]="globalSearchTerm" />
-      </label>
     </header>
 
     <div class="home-body">
@@ -232,6 +228,30 @@
           }
         </div>
 
+        <div class="scheme-type-filter" aria-label="Scheme type quick filter">
+          <button
+            type="button"
+            class="scheme-filter-chip"
+            [class.active]="isSchemeTypeActive(null)"
+            (click)="onSchemeTypeFilter(null)"
+            title="All scheme types"
+          >
+            <span class="material-icons">apps</span>
+          </button>
+          @for (scheme of schemeTypeCatalog; track scheme.label) {
+            <button
+              type="button"
+              class="scheme-filter-chip"
+              [class.active]="isSchemeTypeActive(scheme.label)"
+              [style.--scheme-color]="scheme.color"
+              (click)="onSchemeTypeFilter(scheme.label)"
+              [title]="scheme.label"
+            >
+              <span class="material-icons">{{ scheme.materialIcon }}</span>
+            </button>
+          }
+        </div>
+
         <app-home-map></app-home-map>
 
         @if (facade.mapFacadeRef.summaryOpen()) {
@@ -241,10 +261,6 @@
             (closed)="closeSummary()"
           ></app-project-summary-panel>
         }
-
-        <button type="button" class="map-fab" aria-label="Map tools">
-          <span class="material-icons">directions_car</span>
-        </button>
       </section>
     </div>
   </div>

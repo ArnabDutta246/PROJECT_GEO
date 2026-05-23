@@ -10,6 +10,7 @@ export class MapSelectionStore {
   readonly selectedBlockName = signal<string | null>(null);
   readonly selectedLayerName = signal<string | null>(null);
   readonly selectedProjectId = signal<string | null>(null);
+  readonly selectedSchemeType = signal<string | null>(null);
 
   readonly hasDistrictSelection = computed(() => this.selectedDistrictId() != null);
   readonly hasBlockSelection = computed(() => this.selectedBlockId() != null);
@@ -37,6 +38,14 @@ export class MapSelectionStore {
 
   selectProject(projectId: string | null): void {
     this.selectedProjectId.set(projectId);
+  }
+
+  selectSchemeType(schemeType: string | null): void {
+    this.selectedSchemeType.set(schemeType);
+  }
+
+  clearSchemeType(): void {
+    this.selectedSchemeType.set(null);
   }
 
   clearProjectSelection(): void {

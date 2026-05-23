@@ -6,6 +6,7 @@ import { AuthService, IDefaultUser } from '../../services/auth/auth';
 import { MapSelectionService } from '../../map-selection.service';
 import { Router } from '@angular/router';
 import { MapForInsert } from '../map-for-insert/map-for-insert';
+import { SCHEME_TYPE_LABELS } from '@domain/catalog/scheme-type.catalog';
 
 interface FileWithPreview {
   file: File;
@@ -81,19 +82,7 @@ export class InsertUpdateProject implements OnInit {
     'MISC. (Create new)'
   ];
 
-  schemeTypes = [
-    'Construction / Civil Work',
-    'Plantation',
-    'Production System',
-    'Water Supply',
-    'Sewage / Drainage System',
-    'Waste Management',
-    'Financial Assistance / Loan',
-    'Transport & Infrastructure',
-    'Skills & Workforce Development',
-    'Surface Mining',
-    'Misc. (Create new)'
-  ];
+  schemeTypes = [...SCHEME_TYPE_LABELS];
 
   beneficiaryDocuments: FileWithPreview[] = [];
   planEstimationFiles: FileWithPreview[] = [];

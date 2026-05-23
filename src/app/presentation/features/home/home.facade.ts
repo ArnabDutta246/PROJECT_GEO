@@ -15,6 +15,7 @@ import { FilterOptionViewModel } from './models/home.view-model';
 import { IProjectData } from '../../../project/insert-update-project/insert-update-project';
 import { PROJECT_REPOSITORY } from '@infrastructure/tokens/repository.tokens';
 import { ProjectRepository } from '@domain/repositories/project.repository';
+import { matchesSchemeTypeFilter } from '@domain/catalog/scheme-type.catalog';
 
 @Injectable({ providedIn: 'root' })
 export class HomeFacade {
@@ -37,6 +38,7 @@ export class HomeFacade {
 
   readonly districtNames = computed(() => this.districts().map((item) => item.label));
   readonly blockNames = computed(() => this.blocks().map((item) => item.label));
+  readonly selectedSchemeType = computed(() => this.mapSelectionStore.selectedSchemeType());
 
   private readonly currentUser = signal<User | null>(null);
 
@@ -148,6 +150,12 @@ export class HomeFacade {
     this.mapFacade.closeSummary();
   }
 
+  onSchemeTypeChange(schemeType: string | null): Promise<void> {
+    this.mapSelectionStore.selectSchemeType(schemeType);
+    this.mapFacade.onSchemeTypeFilterChanged();
+    return this.loadProjectsForSelection();
+  }
+
   readonly mapFacadeRef = this.mapFacade;
 
   getSelectedDistrictName(): string {
@@ -226,6 +234,14 @@ export class HomeFacade {
       const block = normalizeGeoName(blockName);
       filtered = filtered.filter((project) => normalizeGeoName(project.mouzaName) === block);
     }
+
+    const schemeType = this.mapSelectionStore.selectedSchemeType();
+    if (schemeType) {
+      filtered = filtered.filter((project) =>
+        matchesSchemeTypeFilter(project.schemeType, schemeType)
+      );
+    }
+
     return filtered;
   }
 

@@ -9,6 +9,11 @@ import { HomeFacade } from './home.facade';
 import { HomeMapComponent } from './components/home-map.component';
 import { ProjectSummaryPanelComponent } from './components/project-summary-panel.component';
 import { AreaSummaryCardComponent } from './components/area-summary-card.component';
+import {
+  getSchemeTypeColor,
+  getSchemeTypeMaterialIcon,
+  SCHEME_TYPE_CATALOG,
+} from '@domain/catalog/scheme-type.catalog';
 
 @Component({
   selector: 'app-home-page',
@@ -21,10 +26,10 @@ export class HomePage implements OnInit {
 
   protected projects: IProjectData[] = [];
   protected searchTerm = '';
-  protected globalSearchTerm = '';
   protected selectedYear = '2024';
-  protected selectedProjectType = 'All';
   protected selectedStatus = 'Active';
+
+  protected readonly schemeTypeCatalog = SCHEME_TYPE_CATALOG;
 
   readonly availableLayers = signal([
     { name: 'OpenStreetMap', label: 'Streets' },
@@ -56,13 +61,12 @@ export class HomePage implements OnInit {
   protected get filteredProjects(): IProjectData[] {
     const source = this.facade.projects().length ? this.facade.projects() : this.projects;
     const keyword = this.searchTerm.trim().toLowerCase();
-    const globalKeyword = this.globalSearchTerm.trim().toLowerCase();
 
-    return source.filter((project) => {
-      const matchesSidebar = !keyword || this.matchesKeyword(project, keyword);
-      const matchesGlobal = !globalKeyword || this.matchesKeyword(project, globalKeyword);
-      return matchesSidebar && matchesGlobal;
-    });
+    if (!keyword) {
+      return source;
+    }
+
+    return source.filter((project) => this.matchesKeyword(project, keyword));
   }
 
   onStateChange(stateId: number | null): void {
@@ -124,23 +128,21 @@ export class HomePage implements OnInit {
   }
 
   getSchemeIcon(schemeType: string): string {
-    const type = schemeType.toLowerCase();
-    if (type.includes('water')) return 'water_drop';
-    if (type.includes('plant')) return 'park';
-    if (type.includes('construction') || type.includes('civil') || type.includes('road')) {
-      return 'road';
-    }
-    return 'construction';
+    return getSchemeTypeMaterialIcon(schemeType);
   }
 
   getSchemeColor(schemeType: string): string {
-    const type = schemeType.toLowerCase();
-    if (type.includes('water')) return '#515f74';
-    if (type.includes('plant')) return '#943700';
-    if (type.includes('construction') || type.includes('civil') || type.includes('road')) {
-      return '#004ac6';
-    }
-    return '#bc4800';
+    return getSchemeTypeColor(schemeType);
+  }
+
+  onSchemeTypeFilter(schemeType: string | null): void {
+    void this.facade.onSchemeTypeChange(schemeType).then(() => {
+      this.projects = this.facade.projects();
+    });
+  }
+
+  isSchemeTypeActive(schemeType: string | null): boolean {
+    return this.facade.selectedSchemeType() === schemeType;
   }
 
   logout(): void {
