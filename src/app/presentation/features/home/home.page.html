@@ -142,61 +142,79 @@
         </div>
 
         <div class="sidebar-stats">
-          <h2>Regional Statistics</h2>
-          <section class="stat-block">
-            <h3>Male/Female Population</h3>
-            <div class="population-chart">
-              <div class="population-bar">
-                <div class="bar male" style="height: 52%"></div>
-                <span>MALE (52%)</span>
-              </div>
-              <div class="population-bar">
-                <div class="bar female" style="height: 48%"></div>
-                <span>FEMALE (48%)</span>
-              </div>
-            </div>
-          </section>
-          <section class="stat-block">
-            <h3>Caste Comparison</h3>
-            <div class="progress-row">
-              <div class="progress-label"><span>General</span><span>45%</span></div>
-              <div class="progress-track"><div class="progress-fill" style="width: 45%"></div></div>
-            </div>
-            <div class="progress-row">
-              <div class="progress-label"><span>OBC</span><span>32%</span></div>
-              <div class="progress-track"><div class="progress-fill" style="width: 32%"></div></div>
-            </div>
-            <div class="progress-row">
-              <div class="progress-label"><span>SC/ST</span><span>23%</span></div>
-              <div class="progress-track"><div class="progress-fill" style="width: 23%"></div></div>
-            </div>
-          </section>
-          <section class="stat-block">
-            <h3>Water Reports</h3>
-            <div class="chart-placeholder"></div>
-            <div class="chart-axis">
-              <span>JAN</span><span>MAR</span><span>MAY</span><span>JUL</span>
-            </div>
-          </section>
-          <section class="stat-block">
-            <h3>Soil &amp; Weather Overview</h3>
-            <div class="metric-grid">
-              <div class="metric-card">
-                <span class="material-icons">grass</span>
-                <div>
-                  <span class="metric-label">Soil Health</span>
-                  <strong>7.2 pH</strong>
+          <div class="sidebar-section-header">
+            <span>Regional Statistics</span>
+          </div>
+          <div class="stats-content">
+            @if (facade.mapFacadeRef.hasAreaSelection()) {
+              <app-area-summary-card
+                [loading]="facade.mapFacadeRef.areaSummaryLoading()"
+                [summary]="facade.mapFacadeRef.areaSummary()"
+                (cleared)="closeAreaSummary()"
+              ></app-area-summary-card>
+            } @else {
+              <section class="stat-block area-summary-placeholder">
+                <p class="area-summary-placeholder__text">
+                  Click a district or block on the map to view selected area details here.
+                </p>
+              </section>
+            }
+
+            <section class="stat-block">
+              <h3>Male/Female Population</h3>
+              <div class="population-chart">
+                <div class="population-bar">
+                  <div class="bar male" style="height: 52%"></div>
+                  <span>MALE (52%)</span>
+                </div>
+                <div class="population-bar">
+                  <div class="bar female" style="height: 48%"></div>
+                  <span>FEMALE (48%)</span>
                 </div>
               </div>
-              <div class="metric-card">
-                <span class="material-icons">thermostat</span>
-                <div>
-                  <span class="metric-label">Weather</span>
-                  <strong>28°C / 64%</strong>
+            </section>
+            <section class="stat-block">
+              <h3>Caste Comparison</h3>
+              <div class="progress-row">
+                <div class="progress-label"><span>General</span><span>45%</span></div>
+                <div class="progress-track"><div class="progress-fill" style="width: 45%"></div></div>
+              </div>
+              <div class="progress-row">
+                <div class="progress-label"><span>OBC</span><span>32%</span></div>
+                <div class="progress-track"><div class="progress-fill" style="width: 32%"></div></div>
+              </div>
+              <div class="progress-row">
+                <div class="progress-label"><span>SC/ST</span><span>23%</span></div>
+                <div class="progress-track"><div class="progress-fill" style="width: 23%"></div></div>
+              </div>
+            </section>
+            <section class="stat-block">
+              <h3>Water Reports</h3>
+              <div class="chart-placeholder"></div>
+              <div class="chart-axis">
+                <span>JAN</span><span>MAR</span><span>MAY</span><span>JUL</span>
+              </div>
+            </section>
+            <section class="stat-block">
+              <h3>Soil &amp; Weather Overview</h3>
+              <div class="metric-grid">
+                <div class="metric-card">
+                  <span class="material-icons">grass</span>
+                  <div>
+                    <span class="metric-label">Soil Health</span>
+                    <strong>7.2 pH</strong>
+                  </div>
+                </div>
+                <div class="metric-card">
+                  <span class="material-icons">thermostat</span>
+                  <div>
+                    <span class="metric-label">Weather</span>
+                    <strong>28°C / 64%</strong>
+                  </div>
                 </div>
               </div>
-            </div>
-          </section>
+            </section>
+          </div>
         </div>
       </aside>
 
@@ -216,11 +234,13 @@
 
         <app-home-map></app-home-map>
 
-        <app-project-summary-panel
-          [open]="facade.mapFacadeRef.summaryOpen()"
-          [summary]="facade.mapFacadeRef.summary()"
-          (closed)="closeSummary()"
-        ></app-project-summary-panel>
+        @if (facade.mapFacadeRef.summaryOpen()) {
+          <app-project-summary-panel
+            [open]="facade.mapFacadeRef.summaryOpen()"
+            [summary]="facade.mapFacadeRef.summary()"
+            (closed)="closeSummary()"
+          ></app-project-summary-panel>
+        }
 
         <button type="button" class="map-fab" aria-label="Map tools">
           <span class="material-icons">directions_car</span>

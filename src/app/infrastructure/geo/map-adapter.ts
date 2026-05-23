@@ -28,6 +28,16 @@ export interface MapBoundsInput {
   northEast: [number, number];
 }
 
+export interface MapClickEvent {
+  latitude: number;
+  longitude: number;
+}
+
+export interface ResolvedBlockClick {
+  blockId: string;
+  blockName: string;
+}
+
 export abstract class MapAdapter {
   abstract initialize(container: HTMLElement, options: MapInitOptions): Promise<void>;
   abstract setBlockLayer(blocks: BlockLayerInput[]): void;
@@ -37,6 +47,9 @@ export abstract class MapAdapter {
   abstract highlightBlock(blockId: string | null): void;
   abstract onMarkerClick(handler: (projectId: string) => void): void;
   abstract onBlockClick(handler: (blockId: string, blockName: string) => void): void;
+  abstract onDistrictClick(handler: (districtName: string) => void): void;
+  abstract onMapClick(handler: (event: MapClickEvent) => void): void;
+  abstract resolveBlockAt(latitude: number, longitude: number): ResolvedBlockClick | null;
   abstract setBaseLayer(layerId: 'osm' | 'satellite'): void;
   abstract invalidateSize(): void;
   abstract destroy(): void;

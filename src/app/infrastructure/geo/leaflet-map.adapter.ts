@@ -2,9 +2,12 @@ import {
   BlockLayerInput,
   MapAdapter,
   MapBoundsInput,
+  MapClickEvent,
   MapInitOptions,
   ProjectMarkerInput,
+  ResolvedBlockClick,
 } from './map-adapter';
+import { pointInGeoJsonGeometry } from './point-in-polygon.util';
 
 type LeafletModule = typeof import('leaflet');
 
@@ -18,6 +21,8 @@ export class LeafletMapAdapter extends MapAdapter {
   private markerIndex = new Map<string, import('leaflet').Marker>();
   private markerClickHandler: ((projectId: string) => void) | null = null;
   private blockClickHandler: ((blockId: string, blockName: string) => void) | null = null;
+  private districtClickHandler: ((districtName: string) => void) | null = null;
+  private mapClickHandler: ((event: MapClickEvent) => void) | null = null;
   private highlightedBlockId: string | null = null;
   private blockFeatures = new Map<string, BlockLayerInput>();
 
@@ -43,6 +48,14 @@ export class LeafletMapAdapter extends MapAdapter {
     );
     this.baseTileLayer.addTo(this.map);
     this.markerLayer = this.L.layerGroup().addTo(this.map);
+
+    this.map.on('click', (event: import('leaflet').LeafletMouseEvent) => {
+      this.mapClickHandler?.({
+        latitude: event.latlng.lat,
+        longitude: event.latlng.lng,
+      });
+    });
+
     this.map.invalidateSize();
   }
 
@@ -74,7 +87,8 @@ export class LeafletMapAdapter extends MapAdapter {
       {
         style: (feature) => this.blockStyle(feature?.properties?.['style'] === 'highlight'),
         onEachFeature: (feature, layer) => {
-          layer.on('click', () => {
+          layer.on('click', (event: import('leaflet').LeafletMouseEvent) => {
+            this.L?.DomEvent.stopPropagation(event);
             const id = String(feature.properties?.['id'] ?? '');
             const name = String(feature.properties?.['name'] ?? '');
             this.blockClickHandler?.(id, name);
@@ -107,7 +121,10 @@ export class LeafletMapAdapter extends MapAdapter {
         direction: 'top',
         opacity: 0.95,
       });
-      leafletMarker.on('click', () => this.markerClickHandler?.(marker.id));
+      leafletMarker.on('click', (event: import('leaflet').LeafletMouseEvent) => {
+        this.L?.DomEvent.stopPropagation(event);
+        this.markerClickHandler?.(marker.id);
+      });
       leafletMarker.addTo(this.markerLayer!);
       this.markerIndex.set(marker.id, leafletMarker);
     });
@@ -156,6 +173,23 @@ export class LeafletMapAdapter extends MapAdapter {
     this.blockClickHandler = handler;
   }
 
+  onDistrictClick(handler: (districtName: string) => void): void {
+    this.districtClickHandler = handler;
+  }
+
+  onMapClick(handler: (event: MapClickEvent) => void): void {
+    this.mapClickHandler = handler;
+  }
+
+  resolveBlockAt(latitude: number, longitude: number): ResolvedBlockClick | null {
+    for (const block of this.blockFeatures.values()) {
+      if (pointInGeoJsonGeometry(latitude, longitude, block.geometry)) {
+        return { blockId: block.id, blockName: block.name };
+      }
+    }
+    return null;
+  }
+
   setBaseLayer(layerId: 'osm' | 'satellite'): void {
     if (!this.map || !this.baseTileLayer || !this.satelliteTileLayer) {
       return;
@@ -185,6 +219,10 @@ export class LeafletMapAdapter extends MapAdapter {
     this.baseTileLayer = null;
     this.satelliteTileLayer = null;
     this.L = null;
+    this.markerClickHandler = null;
+    this.blockClickHandler = null;
+    this.districtClickHandler = null;
+    this.mapClickHandler = null;
   }
 
   private blockStyle(highlight: boolean): import('leaflet').PathOptions {

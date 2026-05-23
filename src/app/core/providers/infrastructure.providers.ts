@@ -13,6 +13,7 @@ import { SessionStorageRepository } from '@infrastructure/persistence/session-st
 import {
   APPLICABLE_AREA_REPOSITORY,
   AUTH_REPOSITORY,
+  ANALYTICS_REPOSITORY,
   GEO_BOUNDARY_REPOSITORY,
   MAP_ADAPTER,
   PROJECT_REPOSITORY,
@@ -22,6 +23,8 @@ import { GeoJsonFileRepository } from '@infrastructure/geo/geo-json-file.reposit
 import { LeafletMapAdapter } from '@infrastructure/geo/leaflet-map.adapter';
 import { MapAdapter } from '@infrastructure/geo/map-adapter';
 import { GeoBoundaryRepository } from '@domain/repositories/geo-boundary.repository';
+import { AnalyticsRepository } from '@domain/repositories/analytics.repository';
+import { CensusFallbackAnalyticsRepository } from '@infrastructure/analytics/census-fallback-analytics.repository';
 
 export const infrastructureProviders: Provider[] = [
   AuthApiRepository,
@@ -84,5 +87,14 @@ export const infrastructureProviders: Provider[] = [
     provide: MapAdapter,
     useExisting: MAP_ADAPTER,
   },
+  {
+    provide: ANALYTICS_REPOSITORY,
+    useExisting: CensusFallbackAnalyticsRepository,
+  },
+  {
+    provide: AnalyticsRepository,
+    useExisting: ANALYTICS_REPOSITORY,
+  },
+  CensusFallbackAnalyticsRepository,
   GeoJsonFileRepository,
 ];

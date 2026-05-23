@@ -1,0 +1,59 @@
+<section class="area-summary-card" aria-label="Selected area summary">
+  @if (loading()) {
+    <div class="area-summary-card__loading" aria-live="polite">
+      <div class="spinner-border spinner-border-sm text-primary" role="status">
+        <span class="visually-hidden">Loading area summary...</span>
+      </div>
+      <span>Loading area data...</span>
+    </div>
+  } @else if (summary(); as item) {
+    <header class="area-summary-card__header">
+      <div class="area-summary-card__title-wrap">
+        <span class="material-icons area-summary-card__icon">place</span>
+        <div>
+          <h3 class="area-summary-card__title">{{ item.title }}</h3>
+          <p class="area-summary-card__subtitle">{{ item.subtitle }}</p>
+        </div>
+      </div>
+      <button
+        type="button"
+        class="area-summary-card__clear"
+        (click)="onClear()"
+        aria-label="Clear selected area"
+      >
+        <span class="material-icons">close</span>
+      </button>
+    </header>
+
+    <dl class="area-summary-card__metadata">
+      <div>
+        <dt>State</dt>
+        <dd>{{ item.stateName }}</dd>
+      </div>
+      <div>
+        <dt>District</dt>
+        <dd>{{ item.districtName }}</dd>
+      </div>
+      @if (item.scopeLevel === 'block' && item.blockName) {
+        <div>
+          <dt>Block</dt>
+          <dd>{{ item.blockName }}</dd>
+        </div>
+      }
+      <div>
+        <dt>Total population</dt>
+        @if (item.populationAvailable) {
+          <dd class="area-summary-card__population">{{ item.totalPopulationLabel }}</dd>
+        } @else {
+          <dd class="area-summary-card__population-unavailable">Population data unavailable</dd>
+        }
+      </div>
+    </dl>
+
+    <div
+      class="area-summary-card__charts-slot"
+      aria-hidden="true"
+      aria-label="Reserved for demographic and resource charts"
+    ></div>
+  }
+</section>

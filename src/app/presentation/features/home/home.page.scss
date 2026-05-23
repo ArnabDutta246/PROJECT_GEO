@@ -336,21 +336,18 @@
 
 .sidebar-stats {
   min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.stats-content {
+  flex: 1;
+  min-height: 0;
   padding: 16px;
   overflow-y: auto;
   overflow-x: hidden;
   overscroll-behavior: contain;
-
-  h2 {
-    margin: 0 0 16px;
-    font-size: 11px;
-    font-weight: 700;
-    position: sticky;
-    top: 0;
-    background: #fff;
-    padding-bottom: 8px;
-    z-index: 1;
-  }
 
   h3 {
     margin: 0 0 12px;
@@ -362,6 +359,26 @@
 
 .stat-block + .stat-block {
   margin-top: 24px;
+}
+
+.area-summary-placeholder {
+  margin-bottom: 0;
+}
+
+.area-summary-placeholder__text {
+  margin: 0;
+  padding: 12px;
+  border: 1px dashed #c3c6d7;
+  border-radius: 12px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #57657a;
+  background: #f7f9fb;
+}
+
+app-area-summary-card {
+  display: block;
+  margin-bottom: 24px;
 }
 
 .population-chart {

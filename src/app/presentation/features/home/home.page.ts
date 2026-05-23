@@ -8,10 +8,11 @@ import { Project as ProjectService } from '../../../services/project/project';
 import { HomeFacade } from './home.facade';
 import { HomeMapComponent } from './components/home-map.component';
 import { ProjectSummaryPanelComponent } from './components/project-summary-panel.component';
+import { AreaSummaryCardComponent } from './components/area-summary-card.component';
 
 @Component({
   selector: 'app-home-page',
-  imports: [CommonModule, FormsModule, HomeMapComponent, ProjectSummaryPanelComponent],
+  imports: [CommonModule, FormsModule, HomeMapComponent, ProjectSummaryPanelComponent, AreaSummaryCardComponent],
   templateUrl: './home.page.html',
   styleUrl: './home.page.scss',
 })
@@ -98,6 +99,10 @@ export class HomePage implements OnInit {
 
   protected closeSummary(): void {
     this.facade.closeProjectSummary();
+  }
+
+  protected closeAreaSummary(): void {
+    this.facade.mapFacadeRef.closeAreaSummary();
   }
 
   switchLayer(layerName: string): void {

@@ -1,11 +1,13 @@
-import { Injectable, PLATFORM_ID, inject, signal } from '@angular/core';
+import { Injectable, PLATFORM_ID, computed, inject, signal } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
 import { User } from '@domain/entities/user.entity';
 import { GeoBoundary } from '@domain/entities/geo-boundary.entity';
+import { GeoScope } from '@domain/value-objects/geo-scope.vo';
 import { UserRole } from '@domain/value-objects/role.enum';
 import { MapBounds } from '@domain/value-objects/map-bounds.vo';
 import { ProjectPin } from '@domain/value-objects/project-pin.vo';
+import { GetAreaSummaryUseCase } from '@application/analytics/get-area-summary.use-case';
 import { GetCurrentUserUseCase } from '@application/auth/get-current-user.use-case';
 import { LoadBlockBoundariesUseCase } from '@application/geo/load-block-boundaries.use-case';
 import { GetMappableProjectsUseCase } from '@application/map/get-mappable-projects.use-case';
@@ -17,10 +19,12 @@ import {
   ProjectMarkerInput,
 } from '@infrastructure/geo/map-adapter';
 import { MapSelectionStore } from '@presentation/state/map-selection.store';
+import { AreaSummaryViewModel } from './models/area-summary.view-model';
 import { ProjectSummaryViewModel } from './models/project-summary.view-model';
 
 const AP_CENTER: [number, number] = [28.2, 94.5];
 const AP_DEFAULT_ZOOM = 8;
+const DEFAULT_STATE_NAME = 'Arunachal Pradesh';
 
 @Injectable({ providedIn: 'root' })
 export class MapFacade {
@@ -31,6 +35,11 @@ export class MapFacade {
   readonly summaryOpen = signal(false);
   readonly selectedPinId = signal<string | null>(null);
   readonly summary = signal<ProjectSummaryViewModel | null>(null);
+  readonly areaSummary = signal<AreaSummaryViewModel | null>(null);
+  readonly areaSummaryLoading = signal(false);
+  readonly hasAreaSelection = computed(
+    () => this.areaSummaryLoading() || this.areaSummary() !== null
+  );
 
   private readonly platformId = inject(PLATFORM_ID);
   private readonly mapAdapter = inject<MapAdapter>(MAP_ADAPTER);
@@ -38,6 +47,7 @@ export class MapFacade {
   private readonly getCurrentUser = inject(GetCurrentUserUseCase);
   private readonly loadBlocks = inject(LoadBlockBoundariesUseCase);
   private readonly getMappableProjects = inject(GetMappableProjectsUseCase);
+  private readonly getAreaSummary = inject(GetAreaSummaryUseCase);
 
   private container: HTMLElement | null = null;
   private initialized = false;
@@ -59,6 +69,16 @@ export class MapFacade {
       });
 
       this.mapAdapter.onMarkerClick((projectId) => this.openSummary(projectId));
+      this.mapAdapter.onBlockClick((blockId, blockName) => {
+        void this.handleBlockSelection(blockId, blockName);
+      });
+      this.mapAdapter.onDistrictClick((districtName) => {
+        void this.handleDistrictSelection(districtName);
+      });
+      this.mapAdapter.onMapClick(({ latitude, longitude }) => {
+        void this.handleMapAreaClick(latitude, longitude);
+      });
+
       this.initialized = true;
       await this.refreshMap();
     } catch (err) {
@@ -146,14 +166,24 @@ export class MapFacade {
     this.mapSelectionStore.clearProjectSelection();
   }
 
+  closeAreaSummary(): void {
+    this.areaSummary.set(null);
+    this.areaSummaryLoading.set(false);
+  }
+
   onFiltersChanged(): void {
     if (this.summaryOpen()) {
       this.closeSummary();
+    }
+    if (this.hasAreaSelection()) {
+      this.closeAreaSummary();
     }
     void this.refreshMap();
   }
 
   destroy(): void {
+    this.closeAreaSummary();
+    this.closeSummary();
     this.mapAdapter.destroy();
     this.initialized = false;
     this.container = null;
@@ -177,6 +207,58 @@ export class MapFacade {
     this.summary.set(ProjectSummaryViewModel.fromPin(pin));
     this.summaryOpen.set(true);
     this.mapSelectionStore.selectProject(projectId);
+  }
+
+  private async handleBlockSelection(blockId: string, blockName: string): Promise<void> {
+    const block =
+      this.currentBlocks.find((item) => item.id === blockId) ??
+      this.currentBlocks.find(
+        (item) => normalizeGeoName(item.name) === normalizeGeoName(blockName)
+      );
+
+    if (!block) {
+      return;
+    }
+
+    this.mapAdapter.highlightBlock(block.id);
+    const scope = GeoScope.block(DEFAULT_STATE_NAME, block.districtName, block.name);
+    await this.openAreaSummary(scope);
+  }
+
+  private async handleDistrictSelection(districtName: string): Promise<void> {
+    const scope = GeoScope.district(DEFAULT_STATE_NAME, districtName);
+    await this.openAreaSummary(scope);
+  }
+
+  private async handleMapAreaClick(latitude: number, longitude: number): Promise<void> {
+    const resolved = this.mapAdapter.resolveBlockAt(latitude, longitude);
+    if (!resolved) {
+      return;
+    }
+    await this.handleBlockSelection(resolved.blockId, resolved.blockName);
+  }
+
+  private async openAreaSummary(scope: GeoScope): Promise<void> {
+    const user = this.getCurrentUser.execute();
+    if (!user) {
+      return;
+    }
+
+    this.areaSummaryLoading.set(true);
+
+    try {
+      const summary = await firstValueFrom(this.getAreaSummary.execute(scope));
+      if (!summary) {
+        this.closeAreaSummary();
+        return;
+      }
+      this.areaSummary.set(AreaSummaryViewModel.fromEntity(summary));
+    } catch (err) {
+      this.error.set(this.readError(err));
+      this.closeAreaSummary();
+    } finally {
+      this.areaSummaryLoading.set(false);
+    }
   }
 
   private async resolveBlocksForUser(

@@ -5,13 +5,13 @@ alwaysApply: true
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan at
-`specs/003-interactive-map-pins/plan.md`.
+`specs/004-area-summary-geo-click/plan.md`.
 
 Key references:
 - Architecture: `architecture.md` (Clean Architecture layers, migration map)
-- Feature spec: `specs/003-interactive-map-pins/spec.md` (US-03 — interactive map with project pins)
-- Data model: `specs/003-interactive-map-pins/data-model.md`
-- GeoJSON layer: `src/app/geojson/ARUNACHAL_PRADESH_BLOCK.geojson` (block boundaries for Leaflet map)
-- API contracts: `specs/003-interactive-map-pins/contracts/` + root `api.md`
-- Quickstart: `specs/003-interactive-map-pins/quickstart.md`
+- Feature spec: `specs/004-area-summary-geo-click/spec.md` (US-04 — area summary on geographic click)
+- Data model: `specs/004-area-summary-geo-click/data-model.md`
+- GeoJSON layer: `src/app/geojson/ARUNACHAL_PRADESH_BLOCK.geojson` (block boundaries + census fallback)
+- API contracts: `specs/004-area-summary-geo-click/contracts/` + root `api.md`
+- Quickstart: `specs/004-area-summary-geo-click/quickstart.md`
 <!-- SPECKIT END -->
