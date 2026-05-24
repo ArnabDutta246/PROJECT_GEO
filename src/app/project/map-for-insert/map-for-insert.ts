@@ -815,7 +815,8 @@ export class MapForInsert implements AfterViewInit, OnDestroy {
       return;
     }
 
-    this.L = await import('leaflet');
+    const leafletModule = await import('leaflet');
+    this.L = (leafletModule as any).default ?? leafletModule;
 
     // Fix missing default marker icons using local assets
     delete (this.L.Icon.Default.prototype as any)._getIconUrl;

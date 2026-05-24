@@ -58,6 +58,16 @@ body {
   backdrop-filter: blur(4px);
   border-radius: 10px;
 }
+
+// Theme-aware layer control bar (base layer selector) - readable in both light and dark theme
+.layer-control-bar {
+  background-color: var(--layer-control-bg) !important;
+  backdrop-filter: blur(4px);
+  border-radius: 10px;
+}
+.text-layer-control-inactive {
+  color: var(--layer-control-inactive-text) !important;
+}
 .threeGradient{
   position: absolute;
   bottom: 0;
@@ -118,39 +128,39 @@ body {
 input::-webkit-input-placeholder,
 textarea::-webkit-input-placeholder,
 select::-webkit-input-placeholder {
-  color: #d3d3d35b !important;
+  color: var(--text-light-Blue-placeholder, #94a3b86b) !important;
 }
 input:-moz-placeholder,
 textarea:-moz-placeholder,
 select:-moz-placeholder {
   /* FF 4-18 */
-  color: #d3d3d35b !important;
+  color: var(--text-light-Blue-placeholder, #94a3b86b) !important;
   opacity: 1;
 }
 input::-moz-placeholder,
 textarea::-moz-placeholder,
 select::-moz-placeholder {
   /* FF 19+ */
-  color: #d3d3d35b !important;
+  color: var(--text-light-Blue-placeholder, #94a3b86b) !important;
   opacity: 1;
 }
 input:-ms-input-placeholder,
 textarea:-ms-input-placeholder,
 select:-ms-input-placeholder {
   /* IE 10+ */
-  color: #d3d3d35b !important;
+  color: var(--text-light-Blue-placeholder, #94a3b86b) !important;
 }
 input::-ms-input-placeholder,
 textarea::-ms-input-placeholder,
 select::-ms-input-placeholder {
   /* Microsoft Edge */
-  color: #d3d3d35b !important;
+  color: var(--text-light-Blue-placeholder, #94a3b86b) !important;
 }
 input::placeholder,
 textarea::placeholder,
 select::placeholder {
   /* modern browser */
-  color: #d3d3d35b !important;
+  color: var(--text-light-Blue-placeholder, #94a3b86b) !important;
 }
 
 .orbitron-font {

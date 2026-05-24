@@ -13,7 +13,7 @@
   --bg-secondary: #f8f9fa;
   --bg-tertiary: #e9ecef;
   --bg-navbar: #e9ecef;
-  --active-nv-link: #6c757d;
+  --active-nv-link: #a2aab1;//#6c757d;
   --input-activeBox: #344561;
 
   // Text colors
@@ -21,9 +21,13 @@
   --text-secondary: #6c757d;
   --text-muted: #868e96;
   --text-inverse: #ffffff;
-  --text-light-Blue: #131414;
-  --text-light-Blue-placeholder: #13141446;
-  --inputLabelText: #bbbbbb ;
+  --text-light-Blue: #212529;
+  --text-light-Blue-placeholder: #6c757d;
+  --inputLabelText: #495057;
+
+  // Layer control (base layer selector bar) - readable in light theme
+  --layer-control-bg: #a1a1a1c7;
+  --layer-control-inactive-text: #d7e3f3;
 
   // Border colors
   --border-color: #dee2e6;

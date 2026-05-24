@@ -815,8 +815,10 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.subscriptions.forEach(sub => sub.unsubscribe());
-    // Clean up drag event listeners
-    this.stopDrag();
+    // Clean up drag event listeners (browser only; avoid window/document in SSR)
+    if (isPlatformBrowser(this.platformId)) {
+      this.stopDrag();
+    }
   }
 
   private getUserProfile(): void {
@@ -997,7 +999,8 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   }
 
   private async initMap(): Promise<void> {
-    this.L = await import('leaflet');
+    const leafletModule = await import('leaflet');
+    this.L = (leafletModule as any).default ?? leafletModule;
 
     // Fix missing default marker icons using local assets
     delete (this.L.Icon.Default.prototype as any)._getIconUrl;
@@ -2168,6 +2171,10 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
   stopDrag = (): void => {
     this.isDragging = false;
+    // Skip in SSR (no window/document)
+    if (typeof window === 'undefined' || typeof document === 'undefined') {
+      return;
+    }
 
     // Apply bounds checking and finalize position
     if (this.panelElementRef?.nativeElement) {
