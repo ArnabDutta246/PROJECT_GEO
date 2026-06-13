@@ -281,11 +281,11 @@
         <app-home-map></app-home-map>
 
         @if (facade.mapFacadeRef.summaryOpen()) {
-          <app-project-summary-panel
+          <app-project-map-detail-card
             [open]="facade.mapFacadeRef.summaryOpen()"
-            [summary]="facade.mapFacadeRef.summary()"
+            [detail]="facade.mapFacadeRef.summary()"
             (closed)="closeSummary()"
-          ></app-project-summary-panel>
+          ></app-project-map-detail-card>
         }
       </section>
     </div>

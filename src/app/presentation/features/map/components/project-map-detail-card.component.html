@@ -1,0 +1,100 @@
+@if (open() && detail(); as item) {
+  <article class="pmd-card" aria-label="Project details">
+    <button type="button" class="pmd-card__close" aria-label="Close project details" (click)="onClose()">
+      <span class="material-icons">close</span>
+    </button>
+
+    <header class="pmd-card__header">
+      <div class="pmd-card__thumb">
+        @if (item.thumbnailUrl) {
+          <img
+            [src]="item.thumbnailUrl"
+            [alt]="item.title"
+            (error)="onImageError($event)"
+          />
+        } @else {
+          <img [src]="placeholderSrc" [alt]="item.title + ' placeholder'" />
+        }
+      </div>
+      <div class="pmd-card__title-wrap">
+        <h2 class="pmd-card__title">{{ item.title }}</h2>
+        <p class="pmd-card__address">
+          <span class="material-icons pmd-card__pin" aria-hidden="true">location_on</span>
+          <span>{{ item.address }}</span>
+        </p>
+      </div>
+    </header>
+
+    <section class="pmd-card__meta" aria-label="Basic information summary">
+      <div class="pmd-card__meta-grid">
+        <div class="pmd-card__meta-item">
+          <span class="pmd-card__meta-label">Status</span>
+          <span class="pmd-card__status">
+            <span class="pmd-card__status-dot" [style.background]="item.statusColor"></span>
+            <span class="pmd-card__status-text">{{ item.statusLabel }}</span>
+          </span>
+        </div>
+        <div class="pmd-card__meta-item">
+          <span class="pmd-card__meta-label">Start Date</span>
+          <span class="pmd-card__meta-value">{{ item.startDateLabel }}</span>
+        </div>
+        <div class="pmd-card__meta-item pmd-card__meta-item--full">
+          <span class="pmd-card__meta-label">Contractor</span>
+          <span class="pmd-card__meta-value">{{ item.contractor }}</span>
+        </div>
+      </div>
+    </section>
+
+    <nav class="pmd-card__tabs" aria-label="Project detail sections">
+      @for (tab of tabOptions; track tab.id) {
+        <button
+          type="button"
+          class="pmd-card__tab"
+          [class.active]="activeTab() === tab.id"
+          (click)="selectTab(tab.id)"
+        >
+          {{ tab.label }}
+        </button>
+      }
+    </nav>
+
+    <section class="pmd-card__tab-panel" [attr.aria-label]="activeTabContent(item)?.label">
+      @if (activeTab() === 'media') {
+        <div class="pmd-card__gallery">
+          <h3 class="pmd-card__gallery-title">Activity Photography &amp; Videography</h3>
+          @if (item.galleryUrls.length > 0) {
+            <div class="pmd-card__gallery-grid">
+              @for (url of gallerySlots(item); track $index) {
+                <div class="pmd-card__gallery-slot">
+                  @if (url) {
+                    <img
+                      [src]="url"
+                      alt="Project media {{ $index + 1 }}"
+                      (error)="onImageError($event)"
+                    />
+                  } @else {
+                    <img [src]="placeholderSrc" alt="No media available" />
+                  }
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="pmd-card__gallery-empty">
+              <img [src]="placeholderSrc" alt="No media uploaded" class="pmd-card__gallery-placeholder" />
+              <p>No photos or videos uploaded</p>
+            </div>
+          }
+        </div>
+      } @else if (activeTabContent(item); as tab) {
+        <dl class="pmd-card__fields">
+          @for (field of tab.fields; track field.label) {
+            <div class="pmd-card__field" [class.pmd-card__field--full]="field.fullWidth">
+              <dt>{{ field.label }}</dt>
+              <dd>{{ field.value }}</dd>
+            </div>
+          }
+        </dl>
+      }
+    </section>
+  </article>
+}

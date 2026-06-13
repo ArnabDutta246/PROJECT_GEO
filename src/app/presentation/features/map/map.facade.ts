@@ -2,6 +2,7 @@ import { Injectable, PLATFORM_ID, computed, inject, signal } from '@angular/core
 import { isPlatformBrowser } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
 import { User } from '@domain/entities/user.entity';
+import { Project } from '@domain/entities/project.entity';
 import { GeoBoundary } from '@domain/entities/geo-boundary.entity';
 import { GeoScope } from '@domain/value-objects/geo-scope.vo';
 import { UserRole } from '@domain/value-objects/role.enum';
@@ -26,7 +27,11 @@ import {
 } from '@infrastructure/geo/map-adapter';
 import { MapSelectionStore } from '@presentation/state/map-selection.store';
 import { AreaSummaryViewModel } from './models/area-summary.view-model';
-import { ProjectSummaryViewModel } from './models/project-summary.view-model';
+import {
+  projectMapDetailCardFromPin,
+  projectMapDetailCardFromProject,
+  ProjectMapDetailCardViewModel,
+} from './models/project-map-detail-card.view-model';
 
 const AP_CENTER: [number, number] = [28.2, 94.5];
 const AP_DEFAULT_ZOOM = 8;
@@ -40,7 +45,7 @@ export class MapFacade {
   readonly blockLayerReady = signal(false);
   readonly summaryOpen = signal(false);
   readonly selectedPinId = signal<string | null>(null);
-  readonly summary = signal<ProjectSummaryViewModel | null>(null);
+  readonly summary = signal<ProjectMapDetailCardViewModel | null>(null);
   readonly areaSummary = signal<AreaSummaryViewModel | null>(null);
   readonly areaSummaryLoading = signal(false);
   readonly hasAreaSelection = computed(
@@ -59,6 +64,7 @@ export class MapFacade {
   private initialized = false;
   private currentBlocks: GeoBoundary[] = [];
   private allPins: ProjectPin[] = [];
+  private projectsById = new Map<string, Project>();
 
   async initialize(container: HTMLElement): Promise<void> {
     if (!isPlatformBrowser(this.platformId)) {
@@ -118,10 +124,11 @@ export class MapFacade {
       this.renderBlockLayer(scopedBlocks, blockName);
       this.blockLayerReady.set(true);
 
-      const { pins } = await firstValueFrom(
+      const { pins, projects } = await firstValueFrom(
         this.getMappableProjects.execute({ districtName, blockName })
       );
       this.allPins = pins;
+      this.projectsById = new Map(projects.map((project) => [project.id, project]));
       this.applySchemeTypeFilter();
       this.fitViewport(user, scopedBlocks);
     } catch (err) {
@@ -238,8 +245,11 @@ export class MapFacade {
     if (!pin) {
       return;
     }
+    const project = this.projectsById.get(projectId);
     this.selectedPinId.set(projectId);
-    this.summary.set(ProjectSummaryViewModel.fromPin(pin));
+    this.summary.set(
+      project ? projectMapDetailCardFromProject(project) : projectMapDetailCardFromPin(pin)
+    );
     this.summaryOpen.set(true);
     this.mapSelectionStore.selectProject(projectId);
   }

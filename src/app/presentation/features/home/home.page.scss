@@ -519,6 +519,13 @@ app-area-summary-card {
     min-height: 0;
   }
 
+  app-project-map-detail-card {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 650;
+  }
+
   ::ng-deep .home-map-shell,
   ::ng-deep .home-map-container,
   ::ng-deep .leaflet-container {

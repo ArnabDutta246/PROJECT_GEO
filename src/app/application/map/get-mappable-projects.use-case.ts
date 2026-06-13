@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, map, of } from 'rxjs';
+import { Project } from '@domain/entities/project.entity';
 import { ProjectPin } from '@domain/value-objects/project-pin.vo';
 import { GetCurrentUserUseCase } from '../auth/get-current-user.use-case';
 import { GetProjectsByJurisdictionUseCase } from '../projects/get-projects-by-jurisdiction.use-case';
@@ -11,6 +12,7 @@ export interface GetMappableProjectsInput {
 
 export interface GetMappableProjectsResult {
   pins: ProjectPin[];
+  projects: Project[];
   skippedCount: number;
 }
 
@@ -22,7 +24,7 @@ export class GetMappableProjectsUseCase {
   execute(input: GetMappableProjectsInput = {}): Observable<GetMappableProjectsResult> {
     const user = this.getCurrentUser.execute();
     if (!user) {
-      return of({ pins: [], skippedCount: 0 });
+      return of({ pins: [], projects: [], skippedCount: 0 });
     }
 
     return this.getProjects.execute(input).pipe(
@@ -37,7 +39,7 @@ export class GetMappableProjectsUseCase {
             skippedCount += 1;
           }
         });
-        return { pins, skippedCount };
+        return { pins, projects, skippedCount };
       })
     );
   }

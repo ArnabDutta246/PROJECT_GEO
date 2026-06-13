@@ -5,7 +5,7 @@ import { AuthService, IDefaultUser } from '../../../services/auth/auth';
 import { Router } from '@angular/router';
 import { HomeFacade } from './home.facade';
 import { HomeMapComponent } from './components/home-map.component';
-import { ProjectSummaryPanelComponent } from './components/project-summary-panel.component';
+import { ProjectMapDetailCardComponent } from '@presentation/features/map/components/project-map-detail-card.component';
 import { AreaSummaryCardComponent } from './components/area-summary-card.component';
 import { SCHEME_TYPE_CATALOG } from '@domain/catalog/scheme-type.catalog';
 import { ProjectPermissionService } from '@domain/services/project-permission.service';
@@ -18,7 +18,7 @@ import { ProjectSidebarItem } from './models/project-sidebar-item.vm';
 
 @Component({
   selector: 'app-home-page',
-  imports: [CommonModule, FormsModule, HomeMapComponent, ProjectSummaryPanelComponent, AreaSummaryCardComponent],
+  imports: [CommonModule, FormsModule, HomeMapComponent, ProjectMapDetailCardComponent, AreaSummaryCardComponent],
   templateUrl: './home.page.html',
   styleUrl: './home.page.scss',
 })
