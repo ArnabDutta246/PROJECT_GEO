@@ -44,9 +44,15 @@
                         <i class="fa-solid fa-rotate me-1"></i>
                     </button>
 
-                    <button type="button" class="btn btn-success flex-grow-1" (click)="submitForm()">
+                    <button
+                        *ngIf="currentStep === totalSteps"
+                        type="button"
+                        class="btn btn-success flex-grow-1 submit-btn-primary"
+                        [disabled]="submitting"
+                        (click)="submitForm()"
+                    >
                         <i class="fa-solid" [ngClass]="isEditMode ? 'fa-save me-1' : 'fa-paper-plane me-1'"></i>
-                        {{ isEditMode ? 'Update Project' : 'Submit Application' }}
+                        {{ submitting ? 'Submitting…' : (isEditMode ? 'Update Project' : 'SUBMIT') }}
                     </button>
                 </div>
 
@@ -97,6 +103,72 @@
                                 </div>
                             </div>
                             <div class="col-lg-4 col-md-6 col-12">
+                                <label class="form-label">State <span class="required-mark">*</span></label>
+                                <select class="form-select figma-input" [ngModel]="formData.selectedStateId"
+                                    (ngModelChange)="onWizardStateChange($event)" name="selectedStateId">
+                                    <option [ngValue]="null">Select State</option>
+                                    <option *ngFor="let state of stateOptions()" [ngValue]="state.id">{{ state.label }}</option>
+                                </select>
+                            </div>
+                            <div class="col-lg-4 col-md-6 col-12">
+                                <label class="form-label">District <span class="required-mark">*</span></label>
+                                <select class="form-select figma-input" [ngModel]="formData.selectedDistrictId"
+                                    (ngModelChange)="onWizardDistrictChange($event)" name="selectedDistrictId"
+                                    [disabled]="!formData.selectedStateId">
+                                    <option [ngValue]="null">Select District</option>
+                                    <option *ngFor="let district of districtOptions()" [ngValue]="district.id">{{ district.label }}</option>
+                                </select>
+                            </div>
+                            <div class="col-lg-4 col-md-6 col-12">
+                                <label class="form-label">Block <span class="required-mark">*</span></label>
+                                <select class="form-select figma-input" [ngModel]="formData.selectedBlockId"
+                                    (ngModelChange)="onWizardBlockChange($event)" name="selectedBlockId"
+                                    [disabled]="!formData.selectedDistrictId">
+                                    <option [ngValue]="null">Select Block</option>
+                                    <option *ngFor="let block of blockOptions()" [ngValue]="block.id">{{ block.label }}</option>
+                                </select>
+                            </div>
+                            <div class="col-lg-4 col-md-6 col-12">
+                                <label class="form-label">Nearest Landmark <span class="required-mark">*</span></label>
+                                <input type="text" class="form-control inputBoxStyle figma-input"
+                                    [(ngModel)]="formData.nearestLandmark" name="nearestLandmark"
+                                    placeholder="Enter nearest landmark">
+                            </div>
+                            <div class="col-lg-4 col-md-6 col-12">
+                                <label class="form-label">Contact Name <span class="required-mark">*</span></label>
+                                <input type="text" class="form-control inputBoxStyle figma-input"
+                                    [(ngModel)]="formData.contactName" name="contactName"
+                                    placeholder="Contact person name">
+                            </div>
+                            <div class="col-lg-4 col-md-6 col-12">
+                                <label class="form-label">Contact Phone <span class="required-mark">*</span></label>
+                                <input type="text" class="form-control inputBoxStyle figma-input"
+                                    [(ngModel)]="formData.contactNumber" name="contactNumber"
+                                    placeholder="Contact phone number">
+                            </div>
+                            <div class="col-lg-4 col-md-6 col-12">
+                                <label class="form-label">Contact Email <span class="required-mark">*</span></label>
+                                <input type="email" class="form-control inputBoxStyle figma-input"
+                                    [(ngModel)]="formData.contactEmail" name="contactEmail"
+                                    placeholder="Contact email">
+                            </div>
+                            <div class="col-lg-4 col-md-6 col-12">
+                                <label class="form-label">Assigned Engineer</label>
+                                <input type="text" class="form-control inputBoxStyle figma-input"
+                                    [(ngModel)]="formData.assignedToUserId" name="assignedToUserId"
+                                    placeholder="Assigned user ID">
+                            </div>
+                            <div class="col-lg-4 col-md-6 col-12">
+                                <label class="form-label">Planned Start Date <span class="required-mark">*</span></label>
+                                <input type="date" class="form-control inputBoxStyle figma-input"
+                                    [(ngModel)]="formData.plannedStartDate" name="plannedStartDate">
+                            </div>
+                            <div class="col-lg-4 col-md-6 col-12">
+                                <label class="form-label">Planned End Date <span class="required-mark">*</span></label>
+                                <input type="date" class="form-control inputBoxStyle figma-input"
+                                    [(ngModel)]="formData.plannedEndDate" name="plannedEndDate">
+                            </div>
+                            <div class="col-lg-4 col-md-6 col-12">
                                 <label class="form-label">Mouza / Village / Location Name</label>
                                 <input type="text" class="form-control inputBoxStyle"
                                     [(ngModel)]="formData.locationName" name="locationName"
@@ -126,7 +198,7 @@
 
                             <div class="col-md-6 col-12 mb-3">
                                 <label class="form-label">AOI Upload (.kml)</label>
-                                <div class="custom-file-upload">
+                                <div class="custom-file-upload aoi-upload-zone">
                                     <input type="file" class="file-input-hidden" (change)="onAoiFileChange($event)"
                                         accept=".kml" multiple #aoiInput>
                                     <div class="file-upload-area" (click)="aoiInput.click()">
@@ -396,19 +468,55 @@
                     </div>
                 </div>
 
-                <!-- Step 5: Application Confirmation Note -->
+                <!-- Step 5: Review Details -->
                 <div *ngIf="isStepActive(5)" class="step-content">
-                    <div class="border rounded p-4 text-center">
-                        <h6 class="fw-bold text-uppercase mb-3 text-primary">Application Confirmation Note</h6>
-                        <div class="alert alert-info border-0 mb-4">
-                            <strong>Note:</strong> Application confirmation & verification will be done by the authority
-                        </div>
-                        <div class="row g-3">
-                            <div class="col-12">
-                                <h6 class="text-muted mb-3">Review your application before submitting</h6>
-                                <p class="text-muted small">Please ensure all information is correct. You can go back to
-                                    any step to make changes.</p>
+                    <div class="review-step">
+                        <h6 class="fw-bold text-uppercase mb-3 text-primary">REVIEW DETAILS</h6>
+                        <div *ngIf="submitError" class="alert alert-danger">{{ submitError }}</div>
+                        <div class="review-grid">
+                            <div class="review-card">
+                                <div class="review-card-header">
+                                    <span>PROJECT DETAILS</span>
+                                    <button type="button" class="review-edit-link" (click)="goToStep(1)">Edit</button>
+                                </div>
+                                <p><strong>Project:</strong> {{ getFinalProjectName() }}</p>
+                                <p><strong>Activity:</strong> {{ formData.activityName || getFinalProjectName() }}</p>
+                                <p><strong>Scheme:</strong> {{ getFinalSchemeType() }}</p>
+                                <p><strong>Location:</strong> {{ formData.locationName }}</p>
+                                <p><strong>Landmark:</strong> {{ formData.nearestLandmark }}</p>
+                                <p><strong>Coordinates:</strong> {{ formData.latitude }}, {{ formData.longitude }}</p>
                             </div>
+                            <div class="review-card">
+                                <div class="review-card-header">
+                                    <span>BENEFICIARIES</span>
+                                    <button type="button" class="review-edit-link" (click)="goToStep(2)">Edit</button>
+                                </div>
+                                <p><strong>Name:</strong> {{ formData.beneficiaryName }}</p>
+                                <p><strong>Estimated Cost:</strong> {{ formData.estimatedCost }}</p>
+                                <p><strong>Final Cost:</strong> {{ formData.finalCost }}</p>
+                                <p><strong>Details:</strong> {{ formData.beneficiaryDetails }}</p>
+                            </div>
+                            <div class="review-card">
+                                <div class="review-card-header">
+                                    <span>DOCUMENTATION</span>
+                                    <button type="button" class="review-edit-link" (click)="goToStep(3)">Edit</button>
+                                </div>
+                                <p><strong>Fund Type:</strong> {{ formData.fundType }}</p>
+                                <p><strong>Beneficiary Docs:</strong> {{ beneficiaryDocuments.length }} file(s)</p>
+                                <p><strong>Plan Estimation:</strong> {{ planEstimationFiles.length }} file(s)</p>
+                                <p><strong>Tender Details:</strong> {{ tenderDetailFiles.length }} file(s)</p>
+                                <p><strong>Other Documents:</strong> {{ otherDocuments.length }} file(s)</p>
+                            </div>
+                        </div>
+                        <div class="review-submit-wrap">
+                            <button
+                                type="button"
+                                class="btn submit-btn-primary"
+                                [disabled]="submitting"
+                                (click)="submitForm()"
+                            >
+                                {{ submitting ? 'Submitting…' : 'SUBMIT' }}
+                            </button>
                         </div>
                     </div>
                 </div>

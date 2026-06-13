@@ -1,0 +1,11 @@
+@use '../project-form.shared.scss';
+
+.pf-step-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pf-upload-row {
+  margin-top: 16px;
+}

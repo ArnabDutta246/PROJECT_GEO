@@ -2,7 +2,11 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, map, of } from 'rxjs';
 import { Project } from '@domain/entities/project.entity';
 import { User } from '@domain/entities/user.entity';
-import { ProjectRepository } from '@domain/repositories/project.repository';
+import {
+  ProjectBasicInfoPayload,
+  ProjectListQuery,
+  ProjectRepository,
+} from '@domain/repositories/project.repository';
 import { Coordinates } from '@domain/value-objects/coordinates.vo';
 import { Jurisdiction } from '@domain/value-objects/jurisdiction.vo';
 import { Money } from '@domain/value-objects/money.vo';
@@ -42,6 +46,19 @@ export class LocalProjectRepository extends ProjectRepository {
     const raw = this.readProjectsFromStorage();
     const scoped = this.filterLegacyProjects(raw, user);
     return of(scoped.map((item, index) => toProject(item, index)));
+  }
+
+  listForUser(_query: ProjectListQuery): Observable<Project[]> {
+    const raw = this.readProjectsFromStorage();
+    return of(raw.map((item, index) => toProject(item, index)));
+  }
+
+  getByNumericId(id: number): Observable<Project | null> {
+    return this.getById(String(id));
+  }
+
+  submitBasicInfo(_payload: ProjectBasicInfoPayload): Observable<void> {
+    return of(undefined);
   }
 
   getById(id: string): Observable<Project | null> {

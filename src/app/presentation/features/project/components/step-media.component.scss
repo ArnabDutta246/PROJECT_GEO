@@ -1,0 +1,10 @@
+@use '../project-form.shared.scss';
+
+.pf-step-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.pf-upload-zone {
+  min-height: 320px;
+}

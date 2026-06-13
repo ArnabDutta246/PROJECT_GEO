@@ -1,0 +1,32 @@
+<div class="pf-upload-wrap">
+  <input
+    #fileInput
+    type="file"
+    class="pf-upload-input"
+    [accept]="accept()"
+    [multiple]="multiple()"
+    (change)="fileChange.emit($event)"
+  />
+  <div class="pf-upload-zone" (click)="triggerBrowse(fileInput)">
+    <p class="pf-upload-title">{{ title() }}</p>
+    <span class="material-icons pf-upload-icon" aria-hidden="true">cloud_upload</span>
+    <p class="pf-upload-hint">
+      {{ hint() }}
+      <button type="button" class="pf-upload-browse" (click)="$event.stopPropagation(); triggerBrowse(fileInput)">
+        Browse
+      </button>
+    </p>
+  </div>
+  @if (files().length > 0) {
+    <div class="pf-file-chip-list">
+      @for (file of files(); track file.file.name + file.file.size) {
+        <span class="pf-file-chip">
+          {{ file.file.name }}
+          <button type="button" aria-label="Remove file" (click)="fileRemove.emit(file)">
+            <span class="material-icons">close</span>
+          </button>
+        </span>
+      }
+    </div>
+  }
+</div>

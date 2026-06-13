@@ -141,13 +141,16 @@ export class MapFacade {
     this.openSummary(projectId);
   }
 
-  focusLegacyProject(match: {
+  focusProjectPin(match: {
+    id: string;
     activityName: string;
     locationName: string;
     latitude?: number | null;
     longitude?: number | null;
+    schemeType?: string;
   }): void {
     const pin =
+      this.pins().find((item) => item.id === match.id) ??
       this.pins().find(
         (item) =>
           item.activityName === match.activityName &&
@@ -164,6 +167,21 @@ export class MapFacade {
     if (pin) {
       this.focusProject(pin.id);
     }
+  }
+
+  focusLegacyProject(match: {
+    activityName: string;
+    locationName: string;
+    latitude?: number | null;
+    longitude?: number | null;
+  }): void {
+    this.focusProjectPin({
+      id: '',
+      activityName: match.activityName,
+      locationName: match.locationName,
+      latitude: match.latitude,
+      longitude: match.longitude,
+    });
   }
 
   closeSummary(): void {

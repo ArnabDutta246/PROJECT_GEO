@@ -14,6 +14,9 @@ export class ProjectPin {
   ) {}
 
   static fromProject(project: Project): ProjectPin | null {
+    if (!project.hasMapCoordinates) {
+      return null;
+    }
     try {
       const coordinates = Coordinates.create(
         project.coordinates.latitude,

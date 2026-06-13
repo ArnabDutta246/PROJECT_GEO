@@ -1,0 +1,24 @@
+<div class="pf-actions">
+  @if (showBack) {
+    <button type="button" class="pf-btn pf-btn-outline" (click)="facade.previousStep()">
+      <span class="material-icons">arrow_back</span>
+      GO BACK
+    </button>
+  }
+  <button type="button" class="pf-btn pf-btn-outline" (click)="facade.resetForm()">RESET</button>
+  <button
+    type="button"
+    class="pf-btn"
+    [class.pf-btn-primary]="!primaryIsSubmit"
+    [class.pf-btn-submit]="primaryIsSubmit"
+    [disabled]="submitting()"
+    (click)="onPrimary()"
+  >
+    {{ primaryLabel }}
+    @if (!primaryIsSubmit) {
+      <span class="material-icons">arrow_forward</span>
+    } @else {
+      <span class="material-icons">send</span>
+    }
+  </button>
+</div>

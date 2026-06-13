@@ -3,17 +3,18 @@ import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService, IDefaultUser } from '../../../services/auth/auth';
 import { Router } from '@angular/router';
-import { IProjectData } from '../../../project/insert-update-project/insert-update-project';
-import { Project as ProjectService } from '../../../services/project/project';
 import { HomeFacade } from './home.facade';
 import { HomeMapComponent } from './components/home-map.component';
 import { ProjectSummaryPanelComponent } from './components/project-summary-panel.component';
 import { AreaSummaryCardComponent } from './components/area-summary-card.component';
+import { SCHEME_TYPE_CATALOG } from '@domain/catalog/scheme-type.catalog';
+import { ProjectPermissionService } from '@domain/services/project-permission.service';
+import { GetCurrentUserUseCase } from '@application/auth/get-current-user.use-case';
 import {
-  getSchemeTypeColor,
-  getSchemeTypeMaterialIcon,
-  SCHEME_TYPE_CATALOG,
-} from '@domain/catalog/scheme-type.catalog';
+  PROJECT_CREATE_CONTEXT_KEY,
+  serializeProjectCreateContext,
+} from '@domain/value-objects/project-create-context.vo';
+import { ProjectSidebarItem } from './models/project-sidebar-item.vm';
 
 @Component({
   selector: 'app-home-page',
@@ -24,7 +25,6 @@ import {
 export class HomePage implements OnInit {
   protected readonly facade = inject(HomeFacade);
 
-  protected projects: IProjectData[] = [];
   protected searchTerm = '';
   protected selectedYear = '2024';
   protected selectedStatus = 'Active';
@@ -38,28 +38,37 @@ export class HomePage implements OnInit {
   readonly currentLayerName = signal('OpenStreetMap');
 
   private readonly userProfile = signal<IDefaultUser | null>(null);
+  private readonly getCurrentUser = inject(GetCurrentUserUseCase);
+  private readonly projectPermission = new ProjectPermissionService();
 
   constructor(
     @Inject(PLATFORM_ID) private readonly platformId: Object,
     private readonly authService: AuthService,
-    private readonly router: Router,
-    private readonly projectService: ProjectService
+    private readonly router: Router
   ) {}
+
+  /** Re-evaluated each change-detection cycle so buttons appear after session loads. */
+  protected canCreateProject(): boolean {
+    const domainUser = this.getCurrentUser.execute();
+    if (domainUser) {
+      return this.projectPermission.canCreateProject(domainUser);
+    }
+    const legacy = this.authService.getCurrentLoginUser() ?? this.userProfile();
+    return this.projectPermission.canCreateFromLegacyRole(legacy?.role, legacy?.permissions ?? []);
+  }
 
   async ngOnInit(): Promise<void> {
     if (!isPlatformBrowser(this.platformId)) {
       return;
     }
 
-    this.projectService.initializeDummyData();
     this.getUserProfile();
     await this.facade.initialize();
-    this.projects = this.facade.projects();
     void this.facade.mapFacadeRef.refreshMap();
   }
 
-  protected get filteredProjects(): IProjectData[] {
-    const source = this.facade.projects().length ? this.facade.projects() : this.projects;
+  protected get filteredProjects(): ProjectSidebarItem[] {
+    const source = this.facade.projects();
     const keyword = this.searchTerm.trim().toLowerCase();
 
     if (!keyword) {
@@ -70,35 +79,50 @@ export class HomePage implements OnInit {
   }
 
   onStateChange(stateId: number | null): void {
-    void this.facade.onStateChange(stateId).then(() => {
-      this.projects = this.facade.projects();
-    });
+    void this.facade.onStateChange(stateId);
   }
 
   onDistrictIdChange(districtId: number | null): void {
-    void this.facade.onDistrictChange(districtId).then(() => {
-      this.projects = this.facade.projects();
-    });
+    void this.facade.onDistrictChange(districtId);
   }
 
   onBlockIdChange(blockId: number | null): void {
-    void this.facade.onBlockChange(blockId).then(() => {
-      this.projects = this.facade.projects();
-    });
+    void this.facade.onBlockChange(blockId);
   }
 
-  protected selectProject(project: IProjectData): void {
+  protected selectProject(project: ProjectSidebarItem): void {
     this.facade.selectProject(project);
   }
 
-  protected selectLocationOnMap(project: IProjectData): void {
+  protected selectLocationOnMap(project: ProjectSidebarItem): void {
     this.facade.selectProject(project);
   }
 
-  protected openProjectInNewTab(project: IProjectData): void {
+  protected openProjectInNewTab(project: ProjectSidebarItem): void {
     sessionStorage.setItem('selectedProjectData', JSON.stringify(project));
     const baseUrl = window.location.origin;
     window.open(`${baseUrl}/projects`, '_blank');
+  }
+
+  protected navigateToCreateProject(): void {
+    if (!this.canCreateProject()) {
+      return;
+    }
+    sessionStorage.setItem(
+      PROJECT_CREATE_CONTEXT_KEY,
+      serializeProjectCreateContext({
+        mode: 'create',
+        stateId: this.facade.selectedStateId(),
+        districtId: this.facade.selectedDistrictId(),
+        blockId: this.facade.selectedBlockId(),
+        projectId: null,
+      })
+    );
+    void this.router.navigate(['/projects']);
+  }
+
+  protected retryLoadProjects(): void {
+    void this.facade.retryLoadProjects();
   }
 
   protected closeSummary(): void {
@@ -118,27 +142,21 @@ export class HomePage implements OnInit {
     return this.currentLayerName() === layerName;
   }
 
-  isProjectSelected(project: IProjectData): boolean {
+  isProjectSelected(project: ProjectSidebarItem): boolean {
     const selectedId = this.facade.mapFacadeRef.selectedPinId();
-    if (!selectedId) {
-      return false;
-    }
-    const pin = this.facade.mapFacadeRef.pins().find((item) => item.id === selectedId);
-    return !!pin && pin.activityName === project.activityName && pin.locationName === project.locationName;
+    return !!selectedId && selectedId === project.id;
   }
 
-  getSchemeIcon(schemeType: string): string {
-    return getSchemeTypeMaterialIcon(schemeType);
+  getSchemeIcon(project: ProjectSidebarItem): string {
+    return project.schemeIcon;
   }
 
-  getSchemeColor(schemeType: string): string {
-    return getSchemeTypeColor(schemeType);
+  getSchemeColor(project: ProjectSidebarItem): string {
+    return project.schemeColor;
   }
 
   onSchemeTypeFilter(schemeType: string | null): void {
-    void this.facade.onSchemeTypeChange(schemeType).then(() => {
-      this.projects = this.facade.projects();
-    });
+    void this.facade.onSchemeTypeChange(schemeType);
   }
 
   isSchemeTypeActive(schemeType: string | null): boolean {
@@ -158,12 +176,12 @@ export class HomePage implements OnInit {
     }
   }
 
-  private matchesKeyword(project: IProjectData, keyword: string): boolean {
+  private matchesKeyword(project: ProjectSidebarItem, keyword: string): boolean {
     return (
-      project.activityName.toLowerCase().includes(keyword) ||
-      project.locationName.toLowerCase().includes(keyword) ||
-      project.schemeType.toLowerCase().includes(keyword) ||
-      project.beneficiaryName.toLowerCase().includes(keyword)
+      project.title.toLowerCase().includes(keyword) ||
+      project.subtitle.toLowerCase().includes(keyword) ||
+      project.schemeLabel.toLowerCase().includes(keyword) ||
+      project.code.toLowerCase().includes(keyword)
     );
   }
 }

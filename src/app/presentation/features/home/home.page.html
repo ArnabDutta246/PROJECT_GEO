@@ -8,6 +8,17 @@
       <button type="button" class="nav-rail-btn" aria-label="Layers">
         <span class="material-icons">layers</span>
       </button>
+      @if (canCreateProject()) {
+        <button
+          type="button"
+          class="nav-rail-btn"
+          aria-label="New project"
+          title="New project"
+          (click)="navigateToCreateProject()"
+        >
+          <span class="material-icons">add</span>
+        </button>
+      }
       <button type="button" class="nav-rail-btn" aria-label="Analytics">
         <span class="material-icons">bar_chart</span>
       </button>
@@ -73,6 +84,7 @@
           <select class="filter-value-select" [(ngModel)]="selectedYear">
             <option value="2024">2024</option>
             <option value="2025">2025</option>
+            <option value="2026">2026</option>
           </select>
         </div>
         <div class="filter-item">
@@ -108,11 +120,25 @@
           </div>
           <div class="sidebar-section-header">
             <span>Projects</span>
-            <span class="material-icons">filter_list</span>
+            <span class="sidebar-section-actions">
+              @if (canCreateProject()) {
+                <button type="button" class="create-project-link" (click)="navigateToCreateProject()">
+                  Create +
+                </button>
+              }
+              <span class="material-icons">filter_list</span>
+            </span>
           </div>
           <div class="project-list">
-            @if (filteredProjects.length) {
-              @for (project of filteredProjects; track project.activityName + project.locationName) {
+            @if (facade.projectsLoading()) {
+              <p class="loading-state">Loading projects…</p>
+            } @else if (facade.projectsError()) {
+              <div class="error-state">
+                <p>{{ facade.projectsError() }}</p>
+                <button type="button" class="retry-btn" (click)="retryLoadProjects()">Retry</button>
+              </div>
+            } @else if (filteredProjects.length) {
+              @for (project of filteredProjects; track project.id) {
                 <button
                   type="button"
                   class="project-list-item"
@@ -121,13 +147,13 @@
                 >
                   <span
                     class="project-icon"
-                    [style.background-color]="getSchemeColor(project.schemeType)"
+                    [style.background-color]="getSchemeColor(project)"
                   >
-                    <span class="material-icons">{{ getSchemeIcon(project.schemeType) }}</span>
+                    <span class="material-icons">{{ getSchemeIcon(project) }}</span>
                   </span>
                   <span class="project-copy">
-                    <span class="project-name">{{ project.activityName }}</span>
-                    <span class="project-address">{{ project.locationName }}</span>
+                    <span class="project-name">{{ project.title }}</span>
+                    <span class="project-address">{{ project.subtitle }}</span>
                   </span>
                 </button>
               }

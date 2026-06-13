@@ -9,6 +9,7 @@ import { JurisdictionApiRepository } from '@infrastructure/http/jurisdiction-api
 import { LocalAuthRepository } from '@infrastructure/persistence/local-auth.repository';
 import { LocalJurisdictionRepository } from '@infrastructure/persistence/local-jurisdiction.repository';
 import { LocalProjectRepository } from '@infrastructure/persistence/local-project.repository';
+import { ProjectApiRepository } from '@infrastructure/http/project-api.repository';
 import { SessionStorageRepository } from '@infrastructure/persistence/session-storage.repository';
 import {
   APPLICABLE_AREA_REPOSITORY,
@@ -32,6 +33,7 @@ export const infrastructureProviders: Provider[] = [
   JurisdictionApiRepository,
   LocalJurisdictionRepository,
   LocalProjectRepository,
+  ProjectApiRepository,
   SessionStorageRepository,
   {
     provide: AUTH_REPOSITORY,
@@ -49,7 +51,11 @@ export const infrastructureProviders: Provider[] = [
   },
   {
     provide: PROJECT_REPOSITORY,
-    useExisting: LocalProjectRepository,
+    deps: [ProjectApiRepository, LocalProjectRepository],
+    useFactory: (
+      apiRepo: ProjectApiRepository,
+      localRepo: LocalProjectRepository
+    ): ProjectRepository => (environment.useLocalData ? localRepo : apiRepo),
   },
   {
     provide: SESSION_REPOSITORY,

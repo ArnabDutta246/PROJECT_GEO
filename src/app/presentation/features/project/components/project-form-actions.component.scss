@@ -1,0 +1,51 @@
+.pf-actions {
+  display: flex;
+  gap: 20px;
+  justify-content: flex-end;
+  align-items: center;
+  width: 100%;
+  margin-top: 24px;
+}
+
+.pf-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-width: 170px;
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 24px;
+  cursor: pointer;
+  box-shadow: 0 4px 2.8px rgba(0, 0, 0, 0.1);
+  border: 1px solid transparent;
+
+  .material-icons {
+    font-size: 20px;
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+}
+
+.pf-btn-outline {
+  background: #fff;
+  border-color: rgba(0, 0, 0, 0.16);
+  color: #827c7c;
+}
+
+.pf-btn-primary {
+  background: #5141e0;
+  color: #fff;
+  min-width: 256px;
+}
+
+.pf-btn-submit {
+  background: #07a456;
+  color: #fff;
+  min-width: 256px;
+}

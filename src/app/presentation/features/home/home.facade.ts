@@ -4,17 +4,17 @@ import { GetApplicableStatesUseCase } from '@application/geo/get-applicable-stat
 import { GetApplicableDistrictsUseCase } from '@application/geo/get-applicable-districts.use-case';
 import { GetApplicableBlocksUseCase } from '@application/geo/get-applicable-blocks.use-case';
 import { GetCurrentUserUseCase } from '@application/auth/get-current-user.use-case';
-import { GetProjectsByJurisdictionUseCase } from '@application/projects/get-projects-by-jurisdiction.use-case';
+import { GetProjectListUseCase } from '@application/projects/get-project-list.use-case';
 import { User } from '@domain/entities/user.entity';
 import { UserRole } from '@domain/value-objects/role.enum';
 import { normalizeGeoName } from '@infrastructure/http/mappers/jurisdiction.mapper';
-import { LocalProjectRepository } from '@infrastructure/persistence/local-project.repository';
 import { MapSelectionStore } from '@presentation/state/map-selection.store';
 import { MapFacade } from '@presentation/features/map/map.facade';
 import { FilterOptionViewModel } from './models/home.view-model';
-import { IProjectData } from '../../../project/insert-update-project/insert-update-project';
-import { PROJECT_REPOSITORY } from '@infrastructure/tokens/repository.tokens';
-import { ProjectRepository } from '@domain/repositories/project.repository';
+import {
+  ProjectSidebarItem,
+  projectSidebarItemFromProject,
+} from './models/project-sidebar-item.vm';
 import { matchesSchemeTypeFilter } from '@domain/catalog/scheme-type.catalog';
 
 @Injectable({ providedIn: 'root' })
@@ -27,7 +27,9 @@ export class HomeFacade {
   readonly selectedBlockId = signal<number | null>(null);
   readonly filtersLoading = signal(false);
   readonly filtersError = signal<string | null>(null);
-  readonly projects = signal<IProjectData[]>([]);
+  readonly projectsLoading = signal(false);
+  readonly projectsError = signal<string | null>(null);
+  readonly projects = signal<ProjectSidebarItem[]>([]);
 
   readonly stateLocked = computed(() => this.states().length <= 1);
   readonly districtLocked = computed(() => {
@@ -46,10 +48,9 @@ export class HomeFacade {
   private readonly getStates = inject(GetApplicableStatesUseCase);
   private readonly getDistricts = inject(GetApplicableDistrictsUseCase);
   private readonly getBlocks = inject(GetApplicableBlocksUseCase);
-  private readonly getProjects = inject(GetProjectsByJurisdictionUseCase);
+  private readonly getProjectList = inject(GetProjectListUseCase);
   private readonly mapSelectionStore = inject(MapSelectionStore);
   private readonly mapFacade = inject(MapFacade);
-  private readonly projectRepository = inject<ProjectRepository>(PROJECT_REPOSITORY);
 
   async initialize(): Promise<void> {
     this.filtersLoading.set(true);
@@ -137,13 +138,19 @@ export class HomeFacade {
     this.mapFacade.onFiltersChanged();
   }
 
-  selectProject(project: IProjectData): void {
-    this.mapFacade.focusLegacyProject({
+  selectProject(project: ProjectSidebarItem): void {
+    this.mapFacade.focusProjectPin({
+      id: project.id,
       activityName: project.activityName,
       locationName: project.locationName,
-      latitude: project.latitude ?? undefined,
-      longitude: project.longitude ?? undefined,
+      latitude: project.latitude,
+      longitude: project.longitude,
+      schemeType: project.schemeType,
     });
+  }
+
+  async retryLoadProjects(): Promise<void> {
+    await this.loadProjectsForSelection();
   }
 
   closeProjectSummary(): void {
@@ -203,69 +210,53 @@ export class HomeFacade {
       return;
     }
 
-    if (this.projectRepository instanceof LocalProjectRepository) {
-      const legacy = await firstValueFrom(this.projectRepository.toLegacyProjects(user));
-      const filtered = this.filterLegacyBySelection(legacy);
-      this.projects.set(filtered);
-      return;
-    }
+    this.projectsLoading.set(true);
+    this.projectsError.set(null);
 
-    const domainProjects = await firstValueFrom(
-      this.getProjects.execute({
-        districtName: this.mapSelectionStore.selectedDistrictName(),
-        blockName: this.mapSelectionStore.selectedBlockName(),
-      })
-    );
-    this.projects.set(this.filterLegacyBySelection(this.mapDomainProjects(domainProjects)));
+    try {
+      const domainProjects = await firstValueFrom(this.getProjectList.execute());
+      const sidebarItems = domainProjects.map(projectSidebarItemFromProject);
+      this.projects.set(this.filterSidebarBySelection(sidebarItems, domainProjects));
+    } catch (error) {
+      this.projectsError.set(this.readError(error));
+      this.projects.set([]);
+    } finally {
+      this.projectsLoading.set(false);
+    }
   }
 
-  private filterLegacyBySelection(projects: IProjectData[]): IProjectData[] {
+  private filterSidebarBySelection(
+    items: ProjectSidebarItem[],
+    domainProjects: import('@domain/entities/project.entity').Project[]
+  ): ProjectSidebarItem[] {
     const districtName = this.mapSelectionStore.selectedDistrictName();
     const blockName = this.mapSelectionStore.selectedBlockName();
+    const projectById = new Map(domainProjects.map((project) => [project.id, project]));
 
-    let filtered = projects;
+    let filtered = items;
     if (districtName) {
       const district = normalizeGeoName(districtName);
-      filtered = filtered.filter(
-        (project) => normalizeGeoName(project.districtName) === district
-      );
+      filtered = filtered.filter((item) => {
+        const project = projectById.get(item.id);
+        return project?.jurisdiction.districts.some(
+          (name) => normalizeGeoName(name) === district
+        );
+      });
     }
     if (blockName) {
       const block = normalizeGeoName(blockName);
-      filtered = filtered.filter((project) => normalizeGeoName(project.mouzaName) === block);
+      filtered = filtered.filter((item) => {
+        const project = projectById.get(item.id);
+        return project?.jurisdiction.blocks.some((name) => normalizeGeoName(name) === block);
+      });
     }
 
     const schemeType = this.mapSelectionStore.selectedSchemeType();
     if (schemeType) {
-      filtered = filtered.filter((project) =>
-        matchesSchemeTypeFilter(project.schemeType, schemeType)
-      );
+      filtered = filtered.filter((item) => matchesSchemeTypeFilter(item.schemeType, schemeType));
     }
 
     return filtered;
-  }
-
-  private mapDomainProjects(projects: import('@domain/entities/project.entity').Project[]): IProjectData[] {
-    return projects.map((project) => ({
-      projectName: project.projectName,
-      activityName: project.activityName,
-      schemeType: project.schemeType,
-      locationName: project.locationName,
-      latitude: project.coordinates.latitude,
-      longitude: project.coordinates.longitude,
-      aoiFile: null,
-      beneficiaryName: project.beneficiaryName,
-      beneficiaryDetails: project.beneficiaryDetails,
-      estimatedCost: project.estimatedCost?.amount ?? 0,
-      finalCost: project.finalCost?.amount ?? 0,
-      fundType: project.fundType,
-      selectedProjectName: project.projectName,
-      newProjectName: '',
-      selectedSchemeType: project.schemeType,
-      newSchemeType: '',
-      districtName: project.jurisdiction.districts[0] ?? '',
-      mouzaName: project.jurisdiction.blocks[0] ?? '',
-    }));
   }
 
   private resolvePreselectedDistrict(

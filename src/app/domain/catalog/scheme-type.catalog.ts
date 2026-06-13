@@ -7,6 +7,7 @@ export interface SchemeTypeDefinition {
   readonly label: string;
   readonly materialIcon: string;
   readonly color: string;
+  readonly apiCode?: string;
 }
 
 export const SCHEME_TYPE_CATALOG: readonly SchemeTypeDefinition[] = [
@@ -14,56 +15,67 @@ export const SCHEME_TYPE_CATALOG: readonly SchemeTypeDefinition[] = [
     label: 'Construction / Civil Work',
     materialIcon: 'construction',
     color: '#004ac6',
+    apiCode: 'GPS_02',
   },
   {
     label: 'Plantation',
     materialIcon: 'park',
     color: '#2e7d32',
+    apiCode: 'GPS_01',
   },
   {
     label: 'Production System',
     materialIcon: 'precision_manufacturing',
     color: '#6a1b9a',
+    apiCode: 'GPS_03',
   },
   {
     label: 'Water Supply',
     materialIcon: 'water_drop',
     color: '#515f74',
+    apiCode: 'GPS_04',
   },
   {
     label: 'Sewage / Drainage System',
     materialIcon: 'plumbing',
     color: '#00838f',
+    apiCode: 'GPS_05',
   },
   {
     label: 'Waste Management',
     materialIcon: 'recycling',
     color: '#558b2f',
+    apiCode: 'GPS_06',
   },
   {
     label: 'Financial Assistance / Loan',
     materialIcon: 'account_balance',
     color: '#1565c0',
+    apiCode: 'GPS_07',
   },
   {
     label: 'Transport & Infrastructure',
     materialIcon: 'directions_car',
     color: '#455a64',
+    apiCode: 'GPS_08',
   },
   {
     label: 'Skills & Workforce Development',
     materialIcon: 'school',
     color: '#f57c00',
+    apiCode: 'GPS_09',
   },
   {
     label: 'Surface Mining',
     materialIcon: 'landscape',
     color: '#795548',
+    apiCode: 'GPS_10',
   },
   {
     label: 'Misc. (Create new)',
     materialIcon: 'category',
     color: '#757575',
+    apiCode: 'GPS_99',
   },
 ] as const;
 
@@ -117,6 +129,10 @@ export function getSchemeTypeLabel(schemeType: string): string {
 
 export function isKnownSchemeType(schemeType: string): boolean {
   return catalogByNormalizedLabel.has(normalizeSchemeTypeKey(schemeType));
+}
+
+export function resolveSchemeTypeApiCode(label: string): string {
+  return resolveSchemeType(label).apiCode ?? 'GPS_99';
 }
 
 export function matchesSchemeTypeFilter(

@@ -1,0 +1,16 @@
+<div class="pf-stepper" aria-label="Project form progress">
+  @for (step of [1, 2, 3, 4, 5]; track step; let last = $last) {
+    <button
+      type="button"
+      class="pf-stepper-item"
+      [class.active]="currentStep() === step"
+      (click)="selectStep(step)"
+    >
+      <span class="pf-stepper-number">{{ step }}</span>
+      <span class="pf-stepper-bar"></span>
+    </button>
+    @if (!last) {
+      <span class="material-icons pf-stepper-arrow" aria-hidden="true">chevron_right</span>
+    }
+  }
+</div>

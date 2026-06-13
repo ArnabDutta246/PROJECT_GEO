@@ -1,0 +1,50 @@
+<div class="pf-step-form">
+  <div class="pf-grid-3">
+    <div class="pf-field">
+      <label class="pf-label">Name of Beneficiary / Beneficiaries <span class="pf-required">*</span></label>
+      <input
+        type="text"
+        class="pf-input"
+        [ngModel]="facade.formData().beneficiaryName"
+        (ngModelChange)="facade.patchFormData({ beneficiaryName: $event })"
+        name="beneficiaryName"
+        placeholder="Enter beneficiary name(s)"
+      />
+    </div>
+    <div class="pf-field">
+      <label class="pf-label">Estimated Cost</label>
+      <input
+        type="number"
+        class="pf-input"
+        [ngModel]="facade.formData().estimatedCost"
+        (ngModelChange)="facade.patchFormData({ estimatedCost: $event })"
+        name="estimatedCost"
+        step="0.01"
+        placeholder="Enter estimated cost"
+      />
+    </div>
+    <div class="pf-field">
+      <label class="pf-label">Final Cost</label>
+      <input
+        type="number"
+        class="pf-input"
+        [ngModel]="facade.formData().finalCost"
+        (ngModelChange)="facade.patchFormData({ finalCost: $event })"
+        name="finalCost"
+        step="0.01"
+        placeholder="Enter final cost"
+      />
+    </div>
+    <div class="pf-field pf-span-full">
+      <label class="pf-label">Beneficiaries Details</label>
+      <textarea
+        class="pf-textarea"
+        [ngModel]="facade.formData().beneficiaryDetails"
+        (ngModelChange)="facade.patchFormData({ beneficiaryDetails: $event })"
+        name="beneficiaryDetails"
+        rows="4"
+        placeholder="Enter beneficiary details"
+      ></textarea>
+    </div>
+  </div>
+</div>

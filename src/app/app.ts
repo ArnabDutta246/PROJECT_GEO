@@ -38,6 +38,13 @@ export class App implements OnInit {
   }
 
   private updateHeaderVisibility(url: string): void {
-    this.showHeader = !(url === '/' || url === '/login' || url === '/home' || url.startsWith('/home?'));
+    const hideHeader =
+      url === '/' ||
+      url === '/login' ||
+      url === '/home' ||
+      url.startsWith('/home?') ||
+      url === '/projects' ||
+      url.startsWith('/projects?');
+    this.showHeader = !hideHeader;
   }
 }

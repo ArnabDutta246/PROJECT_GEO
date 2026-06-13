@@ -1,0 +1,68 @@
+<div class="pf-step-form">
+  <div class="pf-field pf-fund-type">
+    <label class="pf-label">Fund Type <span class="pf-required">*</span></label>
+    <select
+      class="pf-select"
+      [ngModel]="selectedFundType"
+      (ngModelChange)="onFundTypeChange($event)"
+      name="fundType"
+    >
+      <option value="">Select Fund Type</option>
+      @for (option of facade.fundTypeOptions; track option.value) {
+        <option [value]="option.value">{{ option.label }}</option>
+      }
+    </select>
+    @if (selectedFundType === 'OTHER') {
+      <input
+        type="text"
+        class="pf-input"
+        [ngModel]="facade.formData().fundType === 'OTHER' ? '' : facade.formData().fundType"
+        (ngModelChange)="onCustomFundTypeChange($event)"
+        placeholder="Specify fund type"
+      />
+    }
+  </div>
+
+  <div class="pf-grid-4 pf-upload-grid">
+    <div class="pf-field">
+      <label class="pf-label">Beneficiaries Document</label>
+      <app-project-file-upload
+        title="Beneficiaries Document"
+        accept="image/*,.pdf"
+        [files]="facade.beneficiaryDocuments()"
+        (fileChange)="facade.onBeneficiaryDocChange($event)"
+        (fileRemove)="facade.removeBeneficiaryDoc($event)"
+      />
+    </div>
+    <div class="pf-field">
+      <label class="pf-label">Plan &amp; Estimation</label>
+      <app-project-file-upload
+        title="Plan & Estimation"
+        accept=".pdf,.xlsx,.docx"
+        [files]="facade.planEstimationFiles()"
+        (fileChange)="facade.onPlanEstimationChange($event)"
+        (fileRemove)="facade.removePlanEstimation($event)"
+      />
+    </div>
+    <div class="pf-field">
+      <label class="pf-label">Tender Details</label>
+      <app-project-file-upload
+        title="Tender Details"
+        accept=".pdf,.xlsx,.docx"
+        [files]="facade.tenderDetailFiles()"
+        (fileChange)="facade.onTenderDetailsChange($event)"
+        (fileRemove)="facade.removeTenderDetail($event)"
+      />
+    </div>
+    <div class="pf-field">
+      <label class="pf-label">Other Documents</label>
+      <app-project-file-upload
+        title="Other Documents"
+        accept=".pdf,.xlsx,.docx,.jpg,.jpeg"
+        [files]="facade.otherDocuments()"
+        (fileChange)="facade.onOtherDocChange($event)"
+        (fileRemove)="facade.removeOtherDoc($event)"
+      />
+    </div>
+  </div>
+</div>

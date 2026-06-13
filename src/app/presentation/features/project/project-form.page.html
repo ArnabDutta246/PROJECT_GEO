@@ -1,0 +1,84 @@
+<div class="home-dashboard">
+  <aside class="nav-rail" aria-label="Primary navigation">
+    <span class="material-icons nav-logo">map</span>
+    <nav class="nav-rail-items">
+      <button type="button" class="nav-rail-btn" aria-label="Map view" (click)="goHome()">
+        <span class="material-icons">map</span>
+      </button>
+      <button type="button" class="nav-rail-btn" aria-label="Layers">
+        <span class="material-icons">layers</span>
+      </button>
+      <button type="button" class="nav-rail-btn active" aria-label="New project" title="New project">
+        <span class="material-icons">add</span>
+      </button>
+      <button type="button" class="nav-rail-btn" aria-label="Analytics">
+        <span class="material-icons">bar_chart</span>
+      </button>
+      <button type="button" class="nav-rail-btn" aria-label="Documents">
+        <span class="material-icons">description</span>
+      </button>
+      <button type="button" class="nav-rail-btn" aria-label="Settings">
+        <span class="material-icons">settings</span>
+      </button>
+    </nav>
+    <div class="nav-rail-footer">
+      <button type="button" class="nav-rail-btn" aria-label="Help">
+        <span class="material-icons">help</span>
+      </button>
+      <button type="button" class="nav-rail-btn" aria-label="Account">
+        <span class="material-icons">account_circle</span>
+      </button>
+    </div>
+  </aside>
+
+  <div class="home-main">
+    <header class="home-topbar">
+      <h1 class="portal-title">webgap</h1>
+      <div class="filter-group filter-group--compact">
+        <div class="filter-item">
+          <span class="filter-label">Geographic Level</span>
+          <span class="filter-value-text">{{ geographicLevelLabel }}</span>
+        </div>
+      </div>
+    </header>
+
+    <section class="project-step-band">
+      <div class="project-step-band-copy">
+        <h2>{{ stepTitle }}</h2>
+        <p>{{ stepSubtitle }}</p>
+      </div>
+      <app-project-stepper
+        [currentStep]="facade.currentStep()"
+        [totalSteps]="facade.totalSteps()"
+        (stepSelected)="facade.goToStep($event)"
+      />
+    </section>
+
+    <section class="project-content">
+      <div [hidden]="facade.currentStep() !== 1">
+        <app-step-activity-location />
+      </div>
+      <div class="pf-map-wrap" [hidden]="facade.currentStep() !== 1">
+        <app-map-for-insert (locationSelected)="facade.onLocationSelected($event)"></app-map-for-insert>
+      </div>
+      <div [hidden]="facade.currentStep() !== 2">
+        <app-step-beneficiaries />
+      </div>
+      <div [hidden]="facade.currentStep() !== 3">
+        <app-step-documentation />
+      </div>
+      <div [hidden]="facade.currentStep() !== 4">
+        <app-step-media />
+      </div>
+      <div [hidden]="facade.currentStep() !== 5">
+        <app-step-review />
+      </div>
+
+      <app-project-form-actions
+        [currentStep]="facade.currentStep()"
+        [totalSteps]="facade.totalSteps()"
+        [submitting]="facade.submitting()"
+      />
+    </section>
+  </div>
+</div>

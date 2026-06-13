@@ -1,0 +1,33 @@
+export interface IProjectData {
+  projectName: string;
+  activityName: string;
+  schemeType: string;
+  locationName: string;
+  latitude: number | null;
+  longitude: number | null;
+  aoiFile: unknown;
+  beneficiaryName: string;
+  beneficiaryDetails: string;
+  estimatedCost: number | null;
+  finalCost: number | null;
+  fundType: string;
+  selectedProjectName: string;
+  newProjectName: string;
+  selectedSchemeType: string;
+  newSchemeType: string;
+  districtName: string;
+  mouzaName: string;
+  nearestLandmark?: string;
+  contactName?: string;
+  contactNumber?: string;
+  contactEmail?: string;
+  assignedToUserId?: string;
+  plannedStartDate?: string;
+  plannedEndDate?: string;
+  actualStartDate?: string;
+  actualEndDate?: string;
+  selectedStateId?: number | null;
+  selectedDistrictId?: number | null;
+  selectedBlockId?: number | null;
+  numericId?: number;
+}

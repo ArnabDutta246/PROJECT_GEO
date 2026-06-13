@@ -1,0 +1,243 @@
+<div class="pf-step-form">
+  <div class="pf-grid-3">
+    <div class="pf-field">
+      <label class="pf-label">Project Name <span class="pf-required">*</span></label>
+      <select
+        class="pf-select"
+        [ngModel]="facade.formData().selectedProjectName"
+        (ngModelChange)="facade.patchFormData({ selectedProjectName: $event }); facade.onProjectNameChange()"
+        name="selectedProjectName"
+      >
+        <option value="">Select Project Name</option>
+        @for (project of facade.projectNames; track project) {
+          <option [value]="project">{{ project }}</option>
+        }
+      </select>
+      @if (facade.formData().selectedProjectName === 'MISC. (Create new)') {
+        <input
+          type="text"
+          class="pf-input"
+          [ngModel]="facade.formData().newProjectName"
+          (ngModelChange)="facade.patchFormData({ newProjectName: $event })"
+          name="newProjectName"
+          placeholder="Enter new project name"
+        />
+      }
+    </div>
+
+    <div class="pf-field">
+      <label class="pf-label">Name of Activity / Scheme</label>
+      <input
+        type="text"
+        class="pf-input"
+        [ngModel]="facade.formData().activityName"
+        (ngModelChange)="facade.patchFormData({ activityName: $event })"
+        name="activityName"
+        placeholder="Enter activity/scheme name"
+      />
+    </div>
+
+    <div class="pf-field">
+      <label class="pf-label">Scheme Type</label>
+      <select
+        class="pf-select"
+        [ngModel]="facade.formData().selectedSchemeType"
+        (ngModelChange)="facade.patchFormData({ selectedSchemeType: $event }); facade.onSchemeTypeChange()"
+        name="selectedSchemeType"
+      >
+        <option value="">Select Scheme Type</option>
+        @for (scheme of facade.schemeTypes; track scheme) {
+          <option [value]="scheme">{{ scheme }}</option>
+        }
+      </select>
+      @if (facade.formData().selectedSchemeType === 'Misc. (Create new)') {
+        <input
+          type="text"
+          class="pf-input"
+          [ngModel]="facade.formData().newSchemeType"
+          (ngModelChange)="facade.patchFormData({ newSchemeType: $event })"
+          name="newSchemeType"
+          placeholder="Enter new scheme type"
+        />
+      }
+    </div>
+  </div>
+
+  <p class="pf-section-title">Jurisdiction &amp; Contact</p>
+  <div class="pf-grid-3">
+    <div class="pf-field">
+      <label class="pf-label">State <span class="pf-required">*</span></label>
+      <select
+        class="pf-select"
+        [ngModel]="facade.formData().selectedStateId"
+        (ngModelChange)="facade.onWizardStateChange($event)"
+        name="selectedStateId"
+      >
+        <option [ngValue]="null">Select State</option>
+        @for (state of facade.stateOptions(); track state.id) {
+          <option [ngValue]="state.id">{{ state.label }}</option>
+        }
+      </select>
+    </div>
+    <div class="pf-field">
+      <label class="pf-label">District <span class="pf-required">*</span></label>
+      <select
+        class="pf-select"
+        [ngModel]="facade.formData().selectedDistrictId"
+        (ngModelChange)="facade.onWizardDistrictChange($event)"
+        name="selectedDistrictId"
+        [disabled]="!facade.formData().selectedStateId"
+      >
+        <option [ngValue]="null">Select District</option>
+        @for (district of facade.districtOptions(); track district.id) {
+          <option [ngValue]="district.id">{{ district.label }}</option>
+        }
+      </select>
+    </div>
+    <div class="pf-field">
+      <label class="pf-label">Block <span class="pf-required">*</span></label>
+      <select
+        class="pf-select"
+        [ngModel]="facade.formData().selectedBlockId"
+        (ngModelChange)="facade.onWizardBlockChange($event)"
+        name="selectedBlockId"
+        [disabled]="!facade.formData().selectedDistrictId"
+      >
+        <option [ngValue]="null">Select Block</option>
+        @for (block of facade.blockOptions(); track block.id) {
+          <option [ngValue]="block.id">{{ block.label }}</option>
+        }
+      </select>
+    </div>
+    <div class="pf-field">
+      <label class="pf-label">Nearest Landmark <span class="pf-required">*</span></label>
+      <input
+        type="text"
+        class="pf-input"
+        [ngModel]="facade.formData().nearestLandmark"
+        (ngModelChange)="facade.patchFormData({ nearestLandmark: $event })"
+        name="nearestLandmark"
+        placeholder="Enter nearest landmark"
+      />
+    </div>
+    <div class="pf-field">
+      <label class="pf-label">Contact Name <span class="pf-required">*</span></label>
+      <input
+        type="text"
+        class="pf-input"
+        [ngModel]="facade.formData().contactName"
+        (ngModelChange)="facade.patchFormData({ contactName: $event })"
+        name="contactName"
+        placeholder="Contact person name"
+      />
+    </div>
+    <div class="pf-field">
+      <label class="pf-label">Contact Phone <span class="pf-required">*</span></label>
+      <input
+        type="text"
+        class="pf-input"
+        [ngModel]="facade.formData().contactNumber"
+        (ngModelChange)="facade.patchFormData({ contactNumber: $event })"
+        name="contactNumber"
+        placeholder="Contact phone number"
+      />
+    </div>
+    <div class="pf-field">
+      <label class="pf-label">Contact Email <span class="pf-required">*</span></label>
+      <input
+        type="email"
+        class="pf-input"
+        [ngModel]="facade.formData().contactEmail"
+        (ngModelChange)="facade.patchFormData({ contactEmail: $event })"
+        name="contactEmail"
+        placeholder="Contact email"
+      />
+    </div>
+    <div class="pf-field">
+      <label class="pf-label">Assigned Engineer</label>
+      <input
+        type="text"
+        class="pf-input"
+        [ngModel]="facade.formData().assignedToUserId"
+        (ngModelChange)="facade.patchFormData({ assignedToUserId: $event })"
+        name="assignedToUserId"
+        placeholder="Assigned user ID"
+      />
+    </div>
+    <div class="pf-field">
+      <label class="pf-label">Planned Start Date <span class="pf-required">*</span></label>
+      <input
+        type="date"
+        class="pf-input"
+        [ngModel]="facade.formData().plannedStartDate"
+        (ngModelChange)="facade.patchFormData({ plannedStartDate: $event })"
+        name="plannedStartDate"
+      />
+    </div>
+    <div class="pf-field">
+      <label class="pf-label">Planned End Date <span class="pf-required">*</span></label>
+      <input
+        type="date"
+        class="pf-input"
+        [ngModel]="facade.formData().plannedEndDate"
+        (ngModelChange)="facade.patchFormData({ plannedEndDate: $event })"
+        name="plannedEndDate"
+      />
+    </div>
+  </div>
+
+  <p class="pf-section-title">Location &amp; Map</p>
+  <div class="pf-grid-3">
+    <div class="pf-field">
+      <label class="pf-label">Mouza / Village / Location Name <span class="pf-required">*</span></label>
+      <input
+        type="text"
+        class="pf-input"
+        [ngModel]="facade.formData().locationName"
+        (ngModelChange)="facade.patchFormData({ locationName: $event })"
+        name="locationName"
+        placeholder="Enter location name"
+      />
+    </div>
+    <div class="pf-field">
+      <label class="pf-label">Latitude <span class="pf-required">*</span></label>
+      <input
+        type="number"
+        class="pf-input"
+        [ngModel]="facade.formData().latitude"
+        (ngModelChange)="facade.patchFormData({ latitude: $event })"
+        name="latitude"
+        step="any"
+        placeholder="Enter latitude"
+        (blur)="onCoordinateChange()"
+        (keyup.enter)="onCoordinateChange()"
+      />
+    </div>
+    <div class="pf-field">
+      <label class="pf-label">Longitude <span class="pf-required">*</span></label>
+      <input
+        type="number"
+        class="pf-input"
+        [ngModel]="facade.formData().longitude"
+        (ngModelChange)="facade.patchFormData({ longitude: $event })"
+        name="longitude"
+        step="any"
+        placeholder="Enter longitude"
+        (blur)="onCoordinateChange()"
+        (keyup.enter)="onCoordinateChange()"
+      />
+    </div>
+  </div>
+
+  <div class="pf-field pf-upload-row">
+    <label class="pf-label">Upload AOI (.kml)</label>
+    <app-project-file-upload
+      title="Upload Area of Interest"
+      hint="Drag and drop KML file here or"
+      accept=".kml"
+      [files]="facade.aoiFiles()"
+      (fileChange)="facade.onAoiFileChange($event)"
+      (fileRemove)="facade.removeAoiFile($event)"
+    />
+  </div>
+</div>

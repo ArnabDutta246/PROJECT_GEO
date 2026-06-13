@@ -1,7 +1,8 @@
 # ProjectGeo — User Stories
 
-**Document Version:** 1.0  
+**Document Version:** 1.1  
 **Created:** 2026-05-23  
+**Updated:** 2026-06-13  
 **Status:** Draft  
 **Source:** [`requirement.md`](./requirement.md)  
 **Related:** [`api.md`](./api.md) · [`architecture.md`](./architecture.md)
@@ -38,7 +39,7 @@ So that [business value]
 | E-02 | Jurisdiction & Dashboard Filters | Phase 1 | US-02, US-02a, US-02b, US-02c |
 | E-03 | Map & Geo Visualization | Phase 1 | US-03, US-03a, US-03b, US-03c, US-03d |
 | E-04 | Area Analytics & Reports | Phase 2 | US-04, US-04a, US-04b |
-| E-05 | Project Management | Phase 2–3 | US-05, US-05a, US-05b, US-05c |
+| E-05 | Project Management | Phase 2–3 | US-05, US-05a, US-05b, US-05c, US-05d, US-05e, US-05f |
 | E-06 | API Integration & Platform | Phase 1–4 | US-06, US-06a, US-06b |
 | E-07 | Navigation, UI & Accessibility | Phase 3 | US-07, US-07a, US-07b |
 
@@ -67,6 +68,9 @@ So that [business value]
 | US-05a | Edit existing project | District / Block Manager | P1 | E-05 | FR-PROJ-06–08 |
 | US-05b | Upload project documents & media | District / Block Manager | P2 | E-05 | FR-PROJ-04–05 |
 | US-05c | Search and browse project list | All users | P2 | E-05 | FR-DASH-05–07 |
+| US-05d | Dashboard project list from API | All users | P1 | E-05 | FR-DASH-05, FR-DASH-07 |
+| US-05e | Project create entry points (dashboard & side nav) | District / Block Manager | P1 | E-05 | FR-PROJ-01, FR-NAV-01 |
+| US-05f | Submit project basic info via GEOAPI | District / Block Manager | P1 | E-05 | FR-PROJ-02–03, FR-API-01 |
 | US-06 | API-backed production data | System / Dev team | P1 | E-06 | FR-API-01–04 |
 | US-06a | Graceful API errors & loading states | All users | P2 | E-06 | FR-API-05–06 |
 | US-06b | IIS production deployment | DevOps | P2 | E-06 | NFR-07 |
@@ -441,6 +445,30 @@ So that [business value]
 
 ### Epic E-05 — Project Management
 
+**Project create & list journey (v1 — API-backed):**
+
+```mermaid
+flowchart LR
+    A["/home dashboard"] --> B["Projects section\nGetGeoProjectList"]
+    A --> C["Create + button"]
+    A --> D["Side nav\ncreate button"]
+    C --> E["/projects create screen"]
+    D --> E
+    E --> F["InsertUpdateGeoProjectBasicInfo\nPOST gpbi_id=0"]
+    F --> G["Success → refresh list on /home"]
+    B --> H["Sidebar project rows\nname, location, scheme"]
+```
+
+| Step | User action | Story | API |
+|------|-------------|-------|-----|
+| 1 | View project list on dashboard | **US-05d** | `GetGeoProjectList` |
+| 2a | Tap **Create +** under Projects heading | **US-05e** | — |
+| 2b | Tap create button in side nav rail | **US-05e** | — |
+| 3 | Fill existing form fields & submit | **US-05f** | `InsertUpdateGeoProjectBasicInfo` |
+| 4 | See new project in dashboard list | **US-05d** | `GetGeoProjectList` |
+
+---
+
 #### US-05 — Create New Project (P1)
 
 **As a** District Manager or Block Manager  
@@ -461,7 +489,7 @@ So that [business value]
 
 5. **Given** I am a Block Manager, **When** I create a project outside my block, **Then** submission is rejected by validation or API.
 
-> **Dependency:** Project CRUD API pending ([`api.md`](./api.md) §1.3).
+> **Note:** Basic project create/list flows are covered by **US-05d**, **US-05e**, and **US-05f** using GEOAPI endpoints documented in [`api.md`](./api.md) §6. Multi-step beneficiary, document, and media steps remain covered by **US-05** / **US-05b** until upload APIs are available.
 
 ---
 
@@ -515,6 +543,126 @@ So that [business value]
 
 2. **Given** search returns no matches, **When** the list is empty, **Then** I see a friendly "no projects found" message.
 
+> **Prerequisite:** Project list data is loaded via **US-05d** (`GetGeoProjectList`).
+
+---
+
+#### US-05d — Dashboard Project List from API (P1)
+
+**As an** authorized user  
+**I want to** see my applicable projects in the dashboard sidebar loaded from the GEOAPI  
+**So that** the project list reflects real, up-to-date records for my login scope
+
+**Maps to:** FR-DASH-05, FR-DASH-07, FR-API-01
+
+**API:** `GET /UserDetails/GetGeoProjectList` — see [`api.md`](./api.md) §6.2
+
+**Query parameters:**
+
+| Parameter | Value |
+|-----------|-------|
+| `loginUserId` | Logged-in `usp_user_id` |
+| `currentPageNo` | `1` (initial load; extend for pagination later) |
+| `noOfPagesToGet` | Page size (e.g. `50`) |
+| `activeYn` | `Y` for active projects |
+
+**Acceptance scenarios:**
+
+1. **Given** I am logged in on `/home`, **When** the dashboard loads, **Then** the app calls `GetGeoProjectList` with my `loginUserId` and renders results in the **Projects** sidebar section.
+
+2. **Given** the API returns `geoProjectList` with records, **When** the list renders, **Then** each row shows at minimum:
+   - Project name → `gpbi_project_name`
+   - Location → `gpbi_location_name`
+   - Scheme / type labels → `gpbi_project_scheme_type_name`, `gpbi_project_type_name`
+   - Project code → `gpbi_project_code` (when shown in UI)
+
+3. **Given** I change dashboard filters (state, district, block, project type, status), **When** filters apply, **Then** the sidebar list reflects only in-scope projects (client-side filter on API results or refetch per integration design).
+
+4. **Given** the API returns an empty `geoProjectList` with `success: true`, **When** the sidebar renders, **Then** I see a friendly empty state (e.g. "No projects match your filters.") — not an error.
+
+5. **Given** the API call fails or times out, **When** the sidebar cannot load, **Then** I see a clear error or retry state per **US-06a** — not a silent empty list.
+
+6. **Given** I select a project in the sidebar, **When** the item is highlighted, **Then** the map pin for that project is emphasized (when coordinates are available from `gpbi_geo_location_lat` / `gpbi_geo_location_long`).
+
+---
+
+#### US-05e — Project Create Entry Points (Dashboard & Side Nav) (P1)
+
+**As a** District Manager or Block Manager  
+**I want to** start a new project from obvious entry points on the dashboard and side navigation  
+**So that** I can create a project without manually typing a URL
+
+**Maps to:** FR-PROJ-01, FR-NAV-01
+
+**Acceptance scenarios:**
+
+1. **Given** I am on `/home`, **When** I view the **Projects** section header in the dashboard sidebar, **Then** I see the **Projects** heading with a **Create +** control styled as an underlined text/link button beside or below the heading (alongside the existing filter icon).
+
+2. **Given** I have create permission, **When** I click **Create +** in the Projects section, **Then** I am navigated to the project create screen (`/projects`) in **create mode** (`gpbi_id = 0`).
+
+3. **Given** I am on `/home`, **When** I view the left **side nav rail**, **Then** I see a dedicated **project create** button (e.g. add / create-project icon) that is visually distinct from map, layers, and analytics actions.
+
+4. **Given** I click the side nav **project create** button, **When** navigation completes, **Then** I land on the same project create screen (`/projects`) in create mode — same destination as the dashboard **Create +** control.
+
+5. **Given** I do not have create permission (role TBD with backend), **When** the dashboard or side nav renders, **Then** create entry points are hidden or disabled with no navigation to create mode.
+
+6. **Given** I opened create from either entry point, **When** the create screen loads, **Then** jurisdiction context from the dashboard (selected state / district / block) pre-fills matching form dropdowns where applicable.
+
+---
+
+#### US-05f — Submit Project Basic Info via GEOAPI (P1)
+
+**As a** District Manager or Block Manager  
+**I want to** submit the project create form using the GEOAPI project basic-info endpoint  
+**So that** new projects are saved centrally and appear in the dashboard list after creation
+
+**Maps to:** FR-PROJ-02, FR-PROJ-03, FR-PROJ-07, FR-PROJ-08, FR-API-01
+
+**API:** `POST /UserDetails/InsertUpdateGeoProjectBasicInfo` — see [`api.md`](./api.md) §6.1
+
+**Acceptance scenarios:**
+
+1. **Given** I am on the project create screen (`/projects`) with `gpbi_id = 0`, **When** I complete required fields and submit, **Then** the app sends `POST InsertUpdateGeoProjectBasicInfo` with a JSON body matching the API contract.
+
+2. **Given** the API responds with `{ "success": true, "message": "Data submitted successfully." }`, **When** submit completes, **Then** I see a success confirmation and am returned to `/home` (or the project list refreshes) so the new project appears via **US-05d**.
+
+3. **Given** required fields are missing or invalid, **When** I attempt submit, **Then** client-side validation blocks the API call and shows field-level errors on the existing form.
+
+4. **Given** the API returns `success: false` or a validation message, **When** submit fails, **Then** the API `message` is shown to the user and form data is preserved.
+
+5. **Given** I am editing an existing project (`gpbi_id > 0`), **When** I save, **Then** the same endpoint is called with the existing `gpbi_id` (covered in detail by **US-05a**).
+
+**Form field mapping (create screen → API):**
+
+The project create screen keeps its **existing input fields and layout** (activity, location, map coordinates, scheme type, jurisdiction, contact, dates, etc.). On submit, values map to the API DTO as follows:
+
+| UI / form concept | API field | Notes |
+|-------------------|-----------|-------|
+| New project | `gpbi_id` | `0` on create |
+| Project type dropdown | `gpbi_project_type` | Code e.g. `GPT_02` |
+| Project / activity name | `gpbi_project_name` | |
+| Scheme type dropdown | `gpbi_project_scheme_type` | Code e.g. `GPS_01` |
+| State dropdown | `gpbi_state_id` | From `GetUserApplicableState` |
+| District dropdown | `gpbi_district_id` | From `GetUserApplicableDistrict` |
+| Block dropdown | `gpbi_block_id` | From `GetUserApplicableBlock` |
+| Location / village | `gpbi_location_name` | |
+| Nearest landmark | `gpbi_nearest_landmark` | |
+| Map pick / geo type | `gpbi_geo_location_type` | e.g. `POINT` |
+| Latitude | `gpbi_geo_location_lat` | String in API |
+| Longitude | `gpbi_geo_location_long` | String in API |
+| GPS accuracy | `gpbi_geo_location_accuracy` | |
+| Length / area / volume | `gpbi_geo_location_length_area_vol` | `0` for point locations |
+| Assigned engineer / user | `gpbi_project_assigned_to` | User ID e.g. `STEN001` |
+| Contact name | `gpbi_contact_name` | |
+| Contact phone | `gpbi_contact_number` | |
+| Contact email | `gpbi_contact_email_id` | |
+| Status | `gpbi_project_status` | e.g. `PENDING` on create |
+| Logged-in user | `gpbi_login_user` | `usp_user_id` |
+| Active flag | `gpbi_active` | `Y` |
+| Planned / actual dates | `gpbi_planned_start_date`, `gpbi_actual_start_date`, `gpbi_planned_end_date`, `gpbi_actual_end_date` | `YYYY-MM-DD` |
+
+> **Out of scope for US-05f:** Beneficiary details, document uploads, and media uploads (steps 2–4 of the multi-step form) remain local or deferred until file/upload APIs exist (**US-05b**). Only **basic info** is persisted via this endpoint in v1.
+
 ---
 
 ### Epic E-06 — API Integration & Platform
@@ -543,7 +691,9 @@ So that [business value]
 |--------|--------|
 | Login | ✅ Available |
 | State / District / Block dropdowns | ✅ Available |
-| Projects CRUD | ⏳ Pending |
+| Project list (`GetGeoProjectList`) | ✅ Available |
+| Project submit / update basic info (`InsertUpdateGeoProjectBasicInfo`) | ✅ Available |
+| Project delete | ⏳ Pending |
 | Analytics | ⏳ Pending |
 | File upload | ⏳ Pending |
 
@@ -647,6 +797,9 @@ So that [business value]
 | US-05 – Create project | ⚠️ TBD | ✅ | ✅ | ✅ |
 | US-05a – Edit project | ⚠️ TBD | ✅ | ✅ | ✅ |
 | US-05c – Search projects | ✅ | ✅ | ✅ | ✅ |
+| US-05d – API project list | ✅ | ✅ | ✅ | ✅ |
+| US-05e – Create entry points | ⚠️ TBD | ✅ | ✅ | ✅ |
+| US-05f – Submit via GEOAPI | ⚠️ TBD | ✅ | ✅ | ✅ |
 
 ---
 
@@ -666,6 +819,9 @@ So that [business value]
 | EC-10 | User closes project panel while dragging | Panel closes cleanly; no orphaned drag listeners |
 | EC-11 | Concurrent district selection from dropdown and map click | Last action wins; UI stays consistent |
 | EC-12 | Inactive user `usp_active_yn: N` | Login blocked with admin contact message |
+| EC-13 | `GetGeoProjectList` returns empty array | Sidebar shows empty state; map shows no pins |
+| EC-14 | Project submit succeeds but list not refreshed | User sees success toast; home list refetches on return |
+| EC-15 | Create + clicked while filters exclude all projects | Navigate to create; new project uses form jurisdiction, not empty filter |
 
 ---
 
@@ -711,7 +867,8 @@ A user story is **Done** when:
 
 | Stories | Deliverable |
 |---------|-------------|
-| US-05, US-05a, US-05b | Project CRUD + uploads (when API ready) |
+| US-05, US-05a, US-05b | Project CRUD + uploads (basic submit via US-05f; files when API ready) |
+| US-05d, US-05e, US-05f | API project list, create entry points, GEOAPI submit |
 | US-05c, US-03c, US-07, US-07a | Search, layers, UI polish |
 
 ### Sprint 5 — Production (P2)
@@ -732,6 +889,9 @@ A user story is **Done** when:
 | US-03d | FR-MAP-05, FR-DASH-06 | SC-03 |
 | US-04 | FR-ANLY-01–08 | SC-04 |
 | US-05 | FR-PROJ-01–08 | SC-05 |
+| US-05d | FR-DASH-05, FR-DASH-07 | SC-01 |
+| US-05e | FR-PROJ-01, FR-NAV-01 | SC-05 |
+| US-05f | FR-PROJ-02–03, FR-API-01 | SC-05, SC-06 |
 | US-06 | FR-API-01–04 | SC-06 |
 | US-07 | FR-NAV-03 | SC-07 |
 
@@ -751,7 +911,16 @@ Per [`requirement.md`](./requirement.md) §9 — not planned as user stories in 
 
 ---
 
-## 11. Related Documents
+## 11. Changelog
+
+| Version | Date | Changes |
+|---------|------|---------|
+| 1.0 | 2026-05-23 | Initial user stories from requirement.md |
+| 1.1 | 2026-06-13 | Added US-05d (API project list), US-05e (create entry points), US-05f (GEOAPI submit); updated API status and Epic E-05 journey |
+
+---
+
+## 12. Related Documents
 
 | Document | Purpose |
 |----------|---------|

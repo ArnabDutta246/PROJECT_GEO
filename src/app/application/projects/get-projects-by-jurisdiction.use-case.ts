@@ -3,14 +3,13 @@ import { Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Project } from '@domain/entities/project.entity';
 import { JurisdictionFilterService } from '@domain/services/jurisdiction-filter.service';
-import { ProjectRepository } from '@domain/repositories/project.repository';
-import { GetCurrentUserUseCase } from '../auth/get-current-user.use-case';
-import { PROJECT_REPOSITORY } from '@infrastructure/tokens/repository.tokens';
 import { normalizeGeoName } from '@infrastructure/http/mappers/jurisdiction.mapper';
+import { GetCurrentUserUseCase } from '../auth/get-current-user.use-case';
+import { GetProjectListUseCase } from './get-project-list.use-case';
 
 @Injectable({ providedIn: 'root' })
 export class GetProjectsByJurisdictionUseCase {
-  private readonly projectRepository = inject<ProjectRepository>(PROJECT_REPOSITORY);
+  private readonly getProjectList = inject(GetProjectListUseCase);
   private readonly getCurrentUser = inject(GetCurrentUserUseCase);
   private readonly jurisdictionFilter = new JurisdictionFilterService();
 
@@ -23,7 +22,7 @@ export class GetProjectsByJurisdictionUseCase {
       return of([]);
     }
 
-    return this.projectRepository.getAllForUser(user).pipe(
+    return this.getProjectList.execute().pipe(
       map((projects) => this.jurisdictionFilter.filterProjects(projects, user)),
       map((projects) => this.applySelectionFilter(projects, options))
     );

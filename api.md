@@ -1,8 +1,9 @@
 # ProjectGeo — API Specification
 
-**Document Version:** 1.0  
+**Document Version:** 1.1  
 **Created:** 2026-05-23  
-**Status:** Partial — Auth & jurisdiction endpoints documented  
+**Updated:** 2026-06-13  
+**Status:** Partial — Auth, jurisdiction & project endpoints documented  
 **Related:** [`requirement.md`](./requirement.md) · [`architecture.md`](./architecture.md)
 
 ---
@@ -28,6 +29,8 @@ ProjectGeo integrates with the **GEOAPI** backend hosted at `https://webgap.in/G
 | 2 | `GET` | `/UserDetails/GetUserApplicableState` | States visible to user | TBD* |
 | 3 | `GET` | `/UserDetails/GetUserApplicableDistrict` | Districts for user + state | TBD* |
 | 4 | `GET` | `/UserDetails/GetUserApplicableBlock` | Blocks for user + state + district | TBD* |
+| 5 | `POST` | `/UserDetails/InsertUpdateGeoProjectBasicInfo` | Create or update project basic info | TBD* |
+| 6 | `GET` | `/UserDetails/GetGeoProjectList` | Paginated project list for user | TBD* |
 
 \* Confirm with backend whether JWT `Authorization` header is required on GET jurisdiction calls. Until confirmed, send the token on all authenticated requests (recommended).
 
@@ -37,7 +40,7 @@ These are planned per `requirement.md` but **not yet available** from the backen
 
 | Domain | Indicative Endpoint | Status |
 |--------|---------------------|--------|
-| Projects | List / create / update / delete | Pending |
+| Projects | Delete project | Pending |
 | Analytics | Demographics, water, soil reports | Pending |
 | Geo boundaries | State/district/block GeoJSON from API | Pending (static GeoJSON used for now) |
 | Files | Upload AOI, documents, media | Pending |
@@ -496,9 +499,308 @@ API names are **uppercase** (e.g. `CHANGLANG`, `ARUNACHAL PRADESH`). GeoJSON pro
 
 ---
 
-## 6. Error Handling
+## 6. Projects
 
-### 6.1 Login Errors
+Used to submit new projects, update existing project basic info, and list projects for the logged-in user.
+
+**Common rules:**
+
+- Pass `gpbi_login_user` / `loginUserId` = `usp_user_id` from login.
+- Use jurisdiction IDs (`gpbi_state_id`, `gpbi_district_id`, `gpbi_block_id`) from the **GetUserApplicable*** dropdown endpoints.
+- Set `gpbi_id` to `0` for a new project; use the existing `gpbi_id` when updating.
+- Date fields use `YYYY-MM-DD` format.
+
+---
+
+### 6.1 Insert / Update Geo Project Basic Info
+
+Creates a new project or updates an existing one. On create, the backend assigns `gpbi_project_code` (visible in the list response).
+
+**Endpoint:** `POST /UserDetails/InsertUpdateGeoProjectBasicInfo`
+
+#### Request
+
+```bash
+curl -X 'POST' \
+  'https://webgap.in/GEOAPI/api/UserDetails/InsertUpdateGeoProjectBasicInfo' \
+  -H 'accept: text/plain' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "gpbi_id": 0,
+  "gpbi_project_type": "GPT_02",
+  "gpbi_project_name": "TEST PROJECT",
+  "gpbi_project_scheme_type": "GPS_01",
+  "gpbi_state_id": 12,
+  "gpbi_district_id": 10,
+  "gpbi_block_id": 1,
+  "gpbi_location_name": "Kolkata",
+  "gpbi_nearest_landmark": "Behala",
+  "gpbi_geo_location_type": "POINT",
+  "gpbi_geo_location_lat": "41.40338",
+  "gpbi_geo_location_long": "2.17403",
+  "gpbi_geo_location_accuracy": "100",
+  "gpbi_geo_location_length_area_vol": 0,
+  "gpbi_project_assigned_to": "STEN001",
+  "gpbi_contact_name": "Rajib Chakraborty",
+  "gpbi_contact_number": "9051068874",
+  "gpbi_project_status": "PENDING",
+  "gpbi_login_user": "STMN001",
+  "gpbi_active": "Y",
+  "gpbi_contact_email_id": "rajib@gmail.com",
+  "gpbi_planned_start_date": "2026-05-26",
+  "gpbi_actual_start_date": "2026-05-27",
+  "gpbi_planned_end_date": "2026-05-30",
+  "gpbi_actual_end_date": "2026-05-31"
+}'
+```
+
+#### Request Body Schema
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `gpbi_id` | `number` | Yes | `0` = insert; existing ID = update |
+| `gpbi_project_type` | `string` | Yes | Project type code (e.g. `GPT_02`) |
+| `gpbi_project_name` | `string` | Yes | Display name of the project |
+| `gpbi_project_scheme_type` | `string` | Yes | Scheme type code (e.g. `GPS_01`) |
+| `gpbi_state_id` | `number` | Yes | `tsm_state_id` from jurisdiction dropdown |
+| `gpbi_district_id` | `number` | Yes | `tdm_district_id` from jurisdiction dropdown |
+| `gpbi_block_id` | `number` | Yes | `tbm_block_id` from jurisdiction dropdown |
+| `gpbi_location_name` | `string` | Yes | Location / village name |
+| `gpbi_nearest_landmark` | `string` | Yes | Nearest landmark |
+| `gpbi_geo_location_type` | `string` | Yes | Geo shape type (e.g. `POINT`) |
+| `gpbi_geo_location_lat` | `string` | Yes | Latitude (string in API) |
+| `gpbi_geo_location_long` | `string` | Yes | Longitude (string in API) |
+| `gpbi_geo_location_accuracy` | `string` | Yes | GPS accuracy (metres) |
+| `gpbi_geo_location_length_area_vol` | `number` | Yes | Length / area / volume; `0` for point |
+| `gpbi_project_assigned_to` | `string` | Yes | Assigned user ID (e.g. `STEN001`) |
+| `gpbi_contact_name` | `string` | Yes | On-site contact name |
+| `gpbi_contact_number` | `string` | Yes | Contact phone number |
+| `gpbi_contact_email_id` | `string` | Yes | Contact email |
+| `gpbi_project_status` | `string` | Yes | Status code (e.g. `PENDING`) |
+| `gpbi_login_user` | `string` | Yes | Submitting user's `usp_user_id` |
+| `gpbi_active` | `'Y' \| 'N'` | Yes | Active flag |
+| `gpbi_planned_start_date` | `string` | Yes | Planned start (`YYYY-MM-DD`) |
+| `gpbi_actual_start_date` | `string` | No | Actual start (`YYYY-MM-DD`) |
+| `gpbi_planned_end_date` | `string` | Yes | Planned end (`YYYY-MM-DD`) |
+| `gpbi_actual_end_date` | `string` | No | Actual end (`YYYY-MM-DD`) |
+
+**TypeScript DTO:**
+
+```typescript
+interface GeoProjectBasicInfoRequestDto {
+  gpbi_id: number;
+  gpbi_project_type: string;
+  gpbi_project_name: string;
+  gpbi_project_scheme_type: string;
+  gpbi_state_id: number;
+  gpbi_district_id: number;
+  gpbi_block_id: number;
+  gpbi_location_name: string;
+  gpbi_nearest_landmark: string;
+  gpbi_geo_location_type: string;
+  gpbi_geo_location_lat: string;
+  gpbi_geo_location_long: string;
+  gpbi_geo_location_accuracy: string;
+  gpbi_geo_location_length_area_vol: number;
+  gpbi_project_assigned_to: string;
+  gpbi_contact_name: string;
+  gpbi_contact_number: string;
+  gpbi_contact_email_id: string;
+  gpbi_project_status: string;
+  gpbi_login_user: string;
+  gpbi_active: 'Y' | 'N' | string;
+  gpbi_planned_start_date: string;
+  gpbi_actual_start_date?: string;
+  gpbi_planned_end_date: string;
+  gpbi_actual_end_date?: string;
+}
+```
+
+#### Success Response (`200`)
+
+```json
+{
+  "statusCode": 200,
+  "message": "Data submitted successfully.",
+  "success": true
+}
+```
+
+#### Response Schema
+
+```typescript
+interface GeoProjectSubmitResponseDto {
+  statusCode: number;
+  message: string;
+  success: boolean;
+}
+```
+
+#### Frontend Handling Rules
+
+| Rule | Action |
+|------|--------|
+| `success === true` | Show success toast; refresh project list |
+| `gpbi_id === 0` on submit | Treat as create; backend assigns `gpbi_project_code` |
+| `gpbi_id > 0` on submit | Treat as update of existing record |
+| Validation failure | Show `message` from response body |
+
+---
+
+### 6.2 Get Geo Project List
+
+Returns a paginated list of projects visible to the logged-in user.
+
+**Endpoint:** `GET /UserDetails/GetGeoProjectList`
+
+#### Request
+
+```bash
+curl -X 'GET' \
+  'https://webgap.in/GEOAPI/api/UserDetails/GetGeoProjectList?loginUserId=STMN001&currentPageNo=1&noOfPagesToGet=50&activeYn=Y' \
+  -H 'accept: text/plain'
+```
+
+#### Query Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `loginUserId` | `string` | Yes | `usp_user_id` from login |
+| `currentPageNo` | `number` | Yes | 1-based page number |
+| `noOfPagesToGet` | `number` | Yes | Page size (records per request) |
+| `activeYn` | `'Y' \| 'N'` | Yes | Filter by active flag |
+
+#### Success Response
+
+```json
+{
+  "geoProjectList": [
+    {
+      "gpbi_id": 1,
+      "gpbi_project_code": "GP-0526-000001",
+      "gpbi_project_type": "GPT_02",
+      "gpbi_project_type_name": "FOREST & HORTICULTURE",
+      "gpbi_project_name": "TEST PROJECT",
+      "gpbi_project_scheme_type": "GPS_01",
+      "gpbi_project_scheme_type_name": "PLANTATION",
+      "gpbi_state_id": 12,
+      "gpbi_state_name": "ARUNACHAL PRADESH",
+      "gpbi_district_id": 10,
+      "gpbi_district_name": "DIBANG VALLEY",
+      "gpbi_block_id": 1,
+      "gpbi_block_name": "MIPI",
+      "gpbi_location_name": "Kolkata",
+      "gpbi_nearest_landmark": "Behala",
+      "gpbi_geo_location_type": "POINT",
+      "gpbi_geo_location_lat": "41.40338",
+      "gpbi_geo_location_long": "2.17403",
+      "gpbi_geo_location_accuracy": "100",
+      "gpbi_geo_location_length_area_vol": 0,
+      "gpbi_project_assigned_to": "STEN001",
+      "gpbi_project_assigned_to_user_name": "Rajib Chakraborty",
+      "gpbi_contact_name": "Rajib Chakraborty",
+      "gpbi_contact_number": "9051068874",
+      "gpbi_contact_email_id": "rajib@gmail.com",
+      "gpbi_project_status": "PENDING",
+      "gpbi_project_remarks": "",
+      "gpbi_project_created_on": "2026-05-28",
+      "gpbi_planned_start_date": "2026-05-26",
+      "gpbi_actual_start_date": "2026-05-27",
+      "gpbi_planned_end_date": "2026-05-30",
+      "gpbi_actual_end_date": "2026-05-31",
+      "gpbi_active": "Y"
+    }
+  ],
+  "statusCode": 200,
+  "message": "Record's found.",
+  "success": true,
+  "data": null
+}
+```
+
+#### Response Schema
+
+```typescript
+interface GeoProjectListResponseDto extends ApiEnvelope<null> {
+  geoProjectList: GeoProjectListItemDto[];
+}
+
+interface GeoProjectListItemDto {
+  gpbi_id: number;
+  gpbi_project_code: string;
+  gpbi_project_type: string;
+  gpbi_project_type_name: string;
+  gpbi_project_name: string;
+  gpbi_project_scheme_type: string;
+  gpbi_project_scheme_type_name: string;
+  gpbi_state_id: number;
+  gpbi_state_name: string;
+  gpbi_district_id: number;
+  gpbi_district_name: string;
+  gpbi_block_id: number;
+  gpbi_block_name: string;
+  gpbi_location_name: string;
+  gpbi_nearest_landmark: string;
+  gpbi_geo_location_type: string;
+  gpbi_geo_location_lat: string;
+  gpbi_geo_location_long: string;
+  gpbi_geo_location_accuracy: string;
+  gpbi_geo_location_length_area_vol: number;
+  gpbi_project_assigned_to: string;
+  gpbi_project_assigned_to_user_name: string;
+  gpbi_contact_name: string;
+  gpbi_contact_number: string;
+  gpbi_contact_email_id: string;
+  gpbi_project_status: string;
+  gpbi_project_remarks: string;
+  gpbi_project_created_on: string;
+  gpbi_planned_start_date: string;
+  gpbi_actual_start_date: string;
+  gpbi_planned_end_date: string;
+  gpbi_actual_end_date: string;
+  gpbi_active: 'Y' | 'N' | string;
+}
+```
+
+#### Domain Mapping
+
+```typescript
+// Map list item → domain ProjectSummary entity
+class ProjectSummary {
+  constructor(
+    public readonly id: number,
+    public readonly code: string,
+    public readonly name: string,
+    public readonly typeName: string,
+    public readonly schemeTypeName: string,
+    public readonly stateName: string,
+    public readonly districtName: string,
+    public readonly blockName: string,
+    public readonly status: string,
+    public readonly createdOn: string,
+    public readonly active: boolean,
+  ) {}
+}
+```
+
+#### UI Binding Guide
+
+| UI column | API field |
+|-----------|-----------|
+| Project code | `gpbi_project_code` |
+| Project name | `gpbi_project_name` |
+| Type | `gpbi_project_type_name` |
+| Scheme | `gpbi_project_scheme_type_name` |
+| State / District / Block | `gpbi_state_name` / `gpbi_district_name` / `gpbi_block_name` |
+| Status | `gpbi_project_status` |
+| Created on | `gpbi_project_created_on` |
+| Assigned to | `gpbi_project_assigned_to_user_name` |
+
+---
+
+## 7. Error Handling
+
+### 7.1 Login Errors
 
 | Condition | User message (from API) | Frontend action |
 |-----------|-------------------------|-----------------|
@@ -507,7 +809,7 @@ API names are **uppercase** (e.g. `CHANGLANG`, `ARUNACHAL PRADESH`). GeoJSON pro
 | Network failure | — | “Unable to connect. Check network.” |
 | Malformed response | — | Log + generic error |
 
-### 6.2 Jurisdiction Errors
+### 7.2 Jurisdiction Errors
 
 | Condition | Frontend action |
 |-----------|-----------------|
@@ -516,7 +818,7 @@ API names are **uppercase** (e.g. `CHANGLANG`, `ARUNACHAL PRADESH`). GeoJSON pro
 | HTTP 401 / expired JWT | Clear session; redirect to login |
 | HTTP 5xx | Retry once; then show error toast |
 
-### 6.3 Application Error Mapping
+### 7.3 Application Error Mapping
 
 ```typescript
 // infrastructure/http/api-response.mapper.ts
@@ -529,16 +831,17 @@ function assertApiSuccess<T>(response: ApiEnvelope<T> & { success?: boolean | nu
 
 ---
 
-## 7. Frontend Integration (Clean Architecture)
+## 8. Frontend Integration (Clean Architecture)
 
-### 7.1 Infrastructure Repositories
+### 8.1 Infrastructure Repositories
 
 | Repository | Methods | API |
 |------------|---------|-----|
 | `AuthApiRepository` | `login()`, `getCurrentUser()` | `ValidateUserLogin` |
 | `JurisdictionApiRepository` | `getStates()`, `getDistricts()`, `getBlocks()` | `GetUserApplicable*` |
+| `ProjectApiRepository` | `submitProject()`, `getProjectList()` | `InsertUpdateGeoProjectBasicInfo`, `GetGeoProjectList` |
 
-### 7.2 Application Use Cases
+### 8.2 Application Use Cases
 
 | Use Case | Calls |
 |----------|-------|
@@ -547,8 +850,10 @@ function assertApiSuccess<T>(response: ApiEnvelope<T> & { success?: boolean | nu
 | `GetApplicableStatesUseCase` | `JurisdictionRepository.getStates(userId, 0)` |
 | `GetApplicableDistrictsUseCase` | `JurisdictionRepository.getDistricts(userId, stateId, 0)` |
 | `GetApplicableBlocksUseCase` | `JurisdictionRepository.getBlocks(userId, stateId, districtId, 0)` |
+| `SubmitProjectUseCase` | `ProjectRepository.submitProject(dto)` |
+| `GetProjectListUseCase` | `ProjectRepository.getProjectList(userId, page, pageSize, activeYn)` |
 
-### 7.3 Session Storage Keys
+### 8.3 Session Storage Keys
 
 | Key | Content |
 |-----|---------|
@@ -569,7 +874,7 @@ function getOrCreateDeviceUuid(): string {
 }
 ```
 
-### 7.4 HTTP Interceptor
+### 8.4 HTTP Interceptor
 
 ```typescript
 // core/interceptors/auth.interceptor.ts
@@ -582,7 +887,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 };
 ```
 
-### 7.5 Angular Environment
+### 8.5 Angular Environment
 
 ```typescript
 // environments/environment.ts
@@ -607,7 +912,7 @@ export class ApiClientService {
 
 ---
 
-## 8. Login UI Change Impact
+## 9. Login UI Change Impact
 
 The current app login form uses **email + password**. The API expects **`user_id` + password + device_uuid**.
 
@@ -619,7 +924,7 @@ The current app login form uses **email + password**. The API expects **`user_id
 
 ---
 
-## 9. Security Notes
+## 10. Security Notes
 
 - Never commit real credentials to source control.
 - Do not persist `usp_pswd` from login response.
@@ -630,9 +935,9 @@ The current app login form uses **email + password**. The API expects **`user_id
 
 ---
 
-## 10. Testing
+## 11. Testing
 
-### 10.1 Manual cURL Checklist
+### 11.1 Manual cURL Checklist
 
 - [ ] Login success with valid `user_id` / `password`
 - [ ] Login failure with wrong password
@@ -640,8 +945,11 @@ The current app login form uses **email + password**. The API expects **`user_id
 - [ ] Get districts for `stateId=12`
 - [ ] Get blocks for `stateId=12&districtId=12`
 - [ ] Empty district/block list handling
+- [ ] Submit new project with `gpbi_id=0`
+- [ ] Get project list with pagination (`currentPageNo`, `noOfPagesToGet`)
+- [ ] Update existing project with `gpbi_id > 0`
 
-### 10.2 HttpTestingController Example
+### 11.2 HttpTestingController Example
 
 ```typescript
 it('maps login response to User entity', () => {
@@ -658,15 +966,16 @@ it('maps login response to User entity', () => {
 
 ---
 
-## 11. Changelog
+## 12. Changelog
 
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0 | 2026-05-23 | Initial document: login, state, district, block endpoints |
+| 1.1 | 2026-06-13 | Added project submit (`InsertUpdateGeoProjectBasicInfo`) and list (`GetGeoProjectList`) endpoints |
 
 ---
 
-## 12. Open Items for Backend Team
+## 13. Open Items for Backend Team
 
 | # | Question |
 |---|----------|
@@ -674,9 +983,10 @@ it('maps login response to User entity', () => {
 | Q-02 | Complete list of `usp_group_code` values (DM, BM, Admin)? |
 | Q-03 | Should login use email (`usp_mailid`) or only `user_id`? |
 | Q-04 | Logout / token refresh endpoint? |
-| Q-05 | Project CRUD endpoints and schemas? |
+| Q-05 | Valid values for `gpbi_project_type`, `gpbi_project_scheme_type`, `gpbi_project_status`, `gpbi_geo_location_type`? |
 | Q-06 | Analytics endpoints for water/soil/demographics? |
 | Q-07 | Mapping between `tdm_district_id` / `tbm_block_id` and GeoJSON feature IDs? |
+| Q-08 | Project delete endpoint and soft-delete via `gpbi_active`? |
 
 ---
 

@@ -458,3 +458,60 @@ h6.fw-bold.text-uppercase {
   }
 }
 
+.figma-input,
+.inputBoxStyle.figma-input,
+.form-select.figma-input {
+  background: #f6f6f6;
+  border-color: #d8dadc;
+}
+
+.required-mark {
+  color: #d32f2f;
+}
+
+.aoi-upload-zone .file-upload-area {
+  border: 2px dashed #d8dadc;
+}
+
+.review-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.review-card {
+  background: #f8f8f8;
+  border-radius: 8px;
+  padding: 16px;
+  font-size: 13px;
+}
+
+.review-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.review-edit-link {
+  border: 0;
+  background: transparent;
+  color: #3b66ff;
+  font-size: 12px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.submit-btn-primary {
+  background: #07a456;
+  border-color: #07a456;
+  color: #fff;
+}
+
+.review-submit-wrap {
+  margin-top: 24px;
+  display: flex;
+  justify-content: flex-end;
+}
+

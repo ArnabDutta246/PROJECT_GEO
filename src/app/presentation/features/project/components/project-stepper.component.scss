@@ -1,0 +1,44 @@
+.pf-stepper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 509px;
+  max-width: 100%;
+  justify-content: space-between;
+}
+
+.pf-stepper-item {
+  border: 0;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 0;
+  min-width: 44px;
+}
+
+.pf-stepper-number {
+  font-size: 20px;
+  font-weight: 600;
+  color: #000;
+  line-height: 1;
+}
+
+.pf-stepper-bar {
+  width: 44px;
+  height: 5px;
+  border-radius: 29px;
+  background: #e0e0e0;
+}
+
+.pf-stepper-item.active .pf-stepper-bar {
+  background: #5141e0;
+}
+
+.pf-stepper-arrow {
+  font-size: 20px;
+  color: #9ca3af;
+  user-select: none;
+}

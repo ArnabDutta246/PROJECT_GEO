@@ -1,0 +1,13 @@
+<div class="pf-step-form">
+  <div class="pf-field">
+    <label class="pf-label">Activity Photography &amp; Videography Documentation</label>
+    <app-project-file-upload
+      title="Activity Photography & Videography Documentation"
+      hint="Drag and drop photos or videos here or"
+      accept="image/*,video/*"
+      [files]="facade.uploadedMedia()"
+      (fileChange)="facade.onMediaChange($event)"
+      (fileRemove)="facade.removeMedia($event)"
+    />
+  </div>
+</div>

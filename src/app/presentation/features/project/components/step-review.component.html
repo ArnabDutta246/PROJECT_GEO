@@ -1,0 +1,137 @@
+<div class="pf-review">
+  @if (facade.submitError()) {
+    <div class="pf-review-error" role="alert">{{ facade.submitError() }}</div>
+  }
+
+  <section class="pf-review-section">
+    <div class="pf-review-header">
+      <h3>PROJECT DETAILS</h3>
+      <button type="button" class="pf-review-edit" aria-label="Edit project details" (click)="facade.goToStep(1)">
+        <span class="material-icons">edit</span>
+      </button>
+    </div>
+    <div class="pf-review-grid">
+      <div class="pf-review-item">
+        <span class="pf-review-label">Project Name</span>
+        <span class="pf-review-value">{{ facade.getFinalProjectName() }}</span>
+      </div>
+      <div class="pf-review-item">
+        <span class="pf-review-label">Activity / Scheme</span>
+        <span class="pf-review-value">{{ facade.formData().activityName || facade.getFinalProjectName() }}</span>
+      </div>
+      <div class="pf-review-item">
+        <span class="pf-review-label">Scheme Type</span>
+        <span class="pf-review-value">{{ facade.getFinalSchemeType() }}</span>
+      </div>
+      <div class="pf-review-item">
+        <span class="pf-review-label">Location</span>
+        <span class="pf-review-value">{{ facade.formData().locationName || '—' }}</span>
+      </div>
+      <div class="pf-review-item">
+        <span class="pf-review-label">State</span>
+        <span class="pf-review-value">{{ jurisdictionLabel(facade.formData().selectedStateId, facade.stateOptions()) }}</span>
+      </div>
+      <div class="pf-review-item">
+        <span class="pf-review-label">District</span>
+        <span class="pf-review-value">{{ jurisdictionLabel(facade.formData().selectedDistrictId, facade.districtOptions()) }}</span>
+      </div>
+      <div class="pf-review-item">
+        <span class="pf-review-label">Block</span>
+        <span class="pf-review-value">{{ jurisdictionLabel(facade.formData().selectedBlockId, facade.blockOptions()) }}</span>
+      </div>
+      <div class="pf-review-item">
+        <span class="pf-review-label">Landmark</span>
+        <span class="pf-review-value">{{ facade.formData().nearestLandmark || '—' }}</span>
+      </div>
+      <div class="pf-review-item">
+        <span class="pf-review-label">Coordinates</span>
+        <span class="pf-review-value">{{ facade.formData().latitude }}, {{ facade.formData().longitude }}</span>
+      </div>
+      <div class="pf-review-item">
+        <span class="pf-review-label">Contact</span>
+        <span class="pf-review-value">{{ facade.formData().contactName }} · {{ facade.formData().contactNumber }}</span>
+      </div>
+      <div class="pf-review-item">
+        <span class="pf-review-label">Planned Dates</span>
+        <span class="pf-review-value">{{ facade.formData().plannedStartDate }} – {{ facade.formData().plannedEndDate }}</span>
+      </div>
+      <div class="pf-review-item">
+        <span class="pf-review-label">AOI Files</span>
+        <span class="pf-review-value">{{ facade.aoiFiles().length }} file(s)</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="pf-review-section">
+    <div class="pf-review-header">
+      <h3>BENEFICIARIES DETAILS</h3>
+      <button type="button" class="pf-review-edit" aria-label="Edit beneficiaries" (click)="facade.goToStep(2)">
+        <span class="material-icons">edit</span>
+      </button>
+    </div>
+    <div class="pf-review-grid">
+      <div class="pf-review-item">
+        <span class="pf-review-label">Beneficiary Name</span>
+        <span class="pf-review-value">{{ facade.formData().beneficiaryName || '—' }}</span>
+      </div>
+      <div class="pf-review-item">
+        <span class="pf-review-label">Estimated Cost</span>
+        <span class="pf-review-value">{{ facade.formData().estimatedCost ?? '—' }}</span>
+      </div>
+      <div class="pf-review-item">
+        <span class="pf-review-label">Final Cost</span>
+        <span class="pf-review-value">{{ facade.formData().finalCost ?? '—' }}</span>
+      </div>
+      <div class="pf-review-item pf-span-full">
+        <span class="pf-review-label">Details</span>
+        <span class="pf-review-value">{{ facade.formData().beneficiaryDetails || '—' }}</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="pf-review-section">
+    <div class="pf-review-header">
+      <h3>DOCUMENTATION DETAILS</h3>
+      <button type="button" class="pf-review-edit" aria-label="Edit documentation" (click)="facade.goToStep(3)">
+        <span class="material-icons">edit</span>
+      </button>
+    </div>
+    <div class="pf-review-grid">
+      <div class="pf-review-item">
+        <span class="pf-review-label">Fund Type</span>
+        <span class="pf-review-value">{{ facade.getFundTypeLabel(facade.formData().fundType) }}</span>
+      </div>
+      <div class="pf-review-item">
+        <span class="pf-review-label">Beneficiary Docs</span>
+        <span class="pf-review-value">{{ facade.beneficiaryDocuments().length }} file(s)</span>
+      </div>
+      <div class="pf-review-item">
+        <span class="pf-review-label">Plan Estimation</span>
+        <span class="pf-review-value">{{ facade.planEstimationFiles().length }} file(s)</span>
+      </div>
+      <div class="pf-review-item">
+        <span class="pf-review-label">Tender Details</span>
+        <span class="pf-review-value">{{ facade.tenderDetailFiles().length }} file(s)</span>
+      </div>
+      <div class="pf-review-item">
+        <span class="pf-review-label">Other Documents</span>
+        <span class="pf-review-value">{{ facade.otherDocuments().length }} file(s)</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="pf-review-section">
+    <div class="pf-review-header">
+      <h3>MEDIA</h3>
+      <button type="button" class="pf-review-edit" aria-label="Edit media" (click)="facade.goToStep(4)">
+        <span class="material-icons">edit</span>
+      </button>
+    </div>
+    <div class="pf-review-grid">
+      <div class="pf-review-item pf-span-full">
+        <span class="pf-review-label">Uploaded Media</span>
+        <span class="pf-review-value">{{ facade.uploadedMedia().length }} file(s)</span>
+      </div>
+    </div>
+  </section>
+</div>
