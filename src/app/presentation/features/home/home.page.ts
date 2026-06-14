@@ -14,6 +14,7 @@ import {
   PROJECT_CREATE_CONTEXT_KEY,
   serializeProjectCreateContext,
 } from '@domain/value-objects/project-create-context.vo';
+import { MapBaseLayerId } from '@infrastructure/geo/map-adapter';
 import { ProjectSidebarItem } from './models/project-sidebar-item.vm';
 
 @Component({
@@ -31,9 +32,13 @@ export class HomePage implements OnInit {
 
   protected readonly schemeTypeCatalog = SCHEME_TYPE_CATALOG;
 
-  readonly availableLayers = signal([
-    { name: 'OpenStreetMap', label: 'Streets' },
-    { name: 'Satellite', label: 'Satellite' },
+  readonly availableLayers = signal<
+    Array<{ name: string; label: string; layerId: MapBaseLayerId }>
+  >([
+    { name: 'OpenStreetMap', label: 'Streets', layerId: 'streets' },
+    { name: 'Satellite', label: 'Satellite', layerId: 'satellite' },
+    { name: 'Light', label: 'Light', layerId: 'light' },
+    { name: 'Terrain', label: 'Terrain', layerId: 'terrain' },
   ]);
   readonly currentLayerName = signal('OpenStreetMap');
 
@@ -135,7 +140,10 @@ export class HomePage implements OnInit {
 
   switchLayer(layerName: string): void {
     this.currentLayerName.set(layerName);
-    this.facade.mapFacadeRef.setBaseLayer(layerName === 'Satellite' ? 'satellite' : 'osm');
+    const layer = this.availableLayers().find((item) => item.name === layerName);
+    if (layer) {
+      this.facade.mapFacadeRef.setBaseLayer(layer.layerId);
+    }
   }
 
   isLayerActive(layerName: string): boolean {

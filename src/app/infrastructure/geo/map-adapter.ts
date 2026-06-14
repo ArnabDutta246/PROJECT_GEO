@@ -1,5 +1,7 @@
 import { GeoJsonGeometry } from '@domain/value-objects/geo-json-geometry.vo';
 
+export type MapBaseLayerId = 'streets' | 'satellite' | 'light' | 'terrain';
+
 export interface MapInitOptions {
   center: [number, number];
   zoom: number;
@@ -53,7 +55,7 @@ export abstract class MapAdapter {
   abstract onDistrictClick(handler: (districtName: string) => void): void;
   abstract onMapClick(handler: (event: MapClickEvent) => void): void;
   abstract resolveBlockAt(latitude: number, longitude: number): ResolvedBlockClick | null;
-  abstract setBaseLayer(layerId: 'osm' | 'satellite'): void;
+  abstract setBaseLayer(layerId: MapBaseLayerId): void;
   abstract invalidateSize(): void;
   abstract destroy(): void;
 }

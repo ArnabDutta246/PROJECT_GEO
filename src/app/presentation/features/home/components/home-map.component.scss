@@ -124,4 +124,12 @@
 
 :host ::ng-deep .leaflet-tooltip {
   font-size: 0.8rem;
+  border-radius: 8px;
+  padding: 6px 10px;
+  border: 1px solid rgba(195, 198, 215, 0.7);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.14);
+}
+
+:host ::ng-deep .leaflet-interactive {
+  transition: fill-opacity 0.2s ease, stroke-width 0.2s ease;
 }

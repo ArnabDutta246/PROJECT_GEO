@@ -23,6 +23,7 @@ import { MAP_ADAPTER } from '@infrastructure/tokens/repository.tokens';
 import {
   BlockLayerInput,
   MapAdapter,
+  MapBaseLayerId,
   ProjectMarkerInput,
 } from '@infrastructure/geo/map-adapter';
 import { MapSelectionStore } from '@presentation/state/map-selection.store';
@@ -232,7 +233,7 @@ export class MapFacade {
     this.currentBlocks = [];
   }
 
-  setBaseLayer(layerId: 'osm' | 'satellite'): void {
+  setBaseLayer(layerId: MapBaseLayerId): void {
     this.mapAdapter.setBaseLayer(layerId);
   }
 

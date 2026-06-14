@@ -1,6 +1,7 @@
 import {
   BlockLayerInput,
   MapAdapter,
+  MapBaseLayerId,
   MapBoundsInput,
   MapClickEvent,
   MapInitOptions,
@@ -16,8 +17,8 @@ export class LeafletMapAdapter extends MapAdapter {
   private map: import('leaflet').Map | null = null;
   private blockLayer: import('leaflet').GeoJSON | null = null;
   private markerLayer: import('leaflet').LayerGroup | null = null;
-  private baseTileLayer: import('leaflet').TileLayer | null = null;
-  private satelliteTileLayer: import('leaflet').TileLayer | null = null;
+  private tileLayers = new Map<MapBaseLayerId, import('leaflet').TileLayer>();
+  private activeLayerId: MapBaseLayerId = 'streets';
   private markerIndex = new Map<string, import('leaflet').Marker>();
   private markerClickHandler: ((projectId: string) => void) | null = null;
   private blockClickHandler: ((blockId: string, blockName: string) => void) | null = null;
@@ -35,18 +36,42 @@ export class LeafletMapAdapter extends MapAdapter {
       maxZoom: options.maxZoom ?? 18,
     });
 
-    this.baseTileLayer = this.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors',
-      maxZoom: 19,
-    });
-    this.satelliteTileLayer = this.L.tileLayer(
-      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-      {
-        attribution: 'Tiles &copy; Esri',
+    this.tileLayers.set(
+      'streets',
+      this.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors',
         maxZoom: 19,
-      }
+      })
     );
-    this.baseTileLayer.addTo(this.map);
+    this.tileLayers.set(
+      'satellite',
+      this.L.tileLayer(
+        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+        {
+          attribution: 'Tiles &copy; Esri',
+          maxZoom: 19,
+        }
+      )
+    );
+    this.tileLayers.set(
+      'light',
+      this.L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; OpenStreetMap &copy; CARTO',
+        subdomains: 'abcd',
+        maxZoom: 20,
+      })
+    );
+    this.tileLayers.set(
+      'terrain',
+      this.L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+        attribution:
+          'Map data: &copy; OpenStreetMap contributors, SRTM | Map style: &copy; OpenTopoMap',
+        maxZoom: 17,
+      })
+    );
+
+    this.tileLayers.get('streets')?.addTo(this.map);
+    this.activeLayerId = 'streets';
     this.markerLayer = this.L.layerGroup().addTo(this.map);
 
     this.map.on('click', (event: import('leaflet').LeafletMouseEvent) => {
@@ -87,6 +112,18 @@ export class LeafletMapAdapter extends MapAdapter {
       {
         style: (feature) => this.blockStyle(feature?.properties?.['style'] === 'highlight'),
         onEachFeature: (feature, layer) => {
+          const pathLayer = layer as import('leaflet').Path;
+          pathLayer.on('mouseover', () => {
+            if (this.highlightedBlockId === String(feature.properties?.['id'] ?? '')) {
+              return;
+            }
+            pathLayer.setStyle(this.blockStyle(true, true));
+          });
+          pathLayer.on('mouseout', () => {
+            const id = String(feature.properties?.['id'] ?? '');
+            const isHighlighted = this.highlightedBlockId != null && id === this.highlightedBlockId;
+            pathLayer.setStyle(this.blockStyle(isHighlighted));
+          });
           layer.on('click', (event: import('leaflet').LeafletMouseEvent) => {
             this.L?.DomEvent.stopPropagation(event);
             const id = String(feature.properties?.['id'] ?? '');
@@ -194,17 +231,23 @@ export class LeafletMapAdapter extends MapAdapter {
     return null;
   }
 
-  setBaseLayer(layerId: 'osm' | 'satellite'): void {
-    if (!this.map || !this.baseTileLayer || !this.satelliteTileLayer) {
+  setBaseLayer(layerId: MapBaseLayerId): void {
+    if (!this.map || layerId === this.activeLayerId) {
       return;
     }
-    if (layerId === 'satellite') {
-      this.map.removeLayer(this.baseTileLayer);
-      this.satelliteTileLayer.addTo(this.map);
-    } else {
-      this.map.removeLayer(this.satelliteTileLayer);
-      this.baseTileLayer.addTo(this.map);
+
+    const currentLayer = this.tileLayers.get(this.activeLayerId);
+    const nextLayer = this.tileLayers.get(layerId);
+    if (!nextLayer) {
+      return;
     }
+
+    if (currentLayer) {
+      this.map.removeLayer(currentLayer);
+    }
+    nextLayer.addTo(this.map);
+    this.activeLayerId = layerId;
+    this.refreshBlockLayerStyles();
   }
 
   invalidateSize(): void {
@@ -220,8 +263,8 @@ export class LeafletMapAdapter extends MapAdapter {
     }
     this.blockLayer = null;
     this.markerLayer = null;
-    this.baseTileLayer = null;
-    this.satelliteTileLayer = null;
+    this.tileLayers.clear();
+    this.activeLayerId = 'streets';
     this.L = null;
     this.markerClickHandler = null;
     this.blockClickHandler = null;
@@ -229,9 +272,65 @@ export class LeafletMapAdapter extends MapAdapter {
     this.mapClickHandler = null;
   }
 
-  private blockStyle(highlight: boolean): import('leaflet').PathOptions {
-    return highlight
-      ? { color: '#ff7800', weight: 2, fillColor: '#ff7800', fillOpacity: 0.35 }
-      : { color: '#3388ff', weight: 2, fillColor: '#3388ff', fillOpacity: 0.1 };
+  private refreshBlockLayerStyles(): void {
+    this.highlightBlock(this.highlightedBlockId);
+  }
+
+  private usesHighContrastBoundaries(): boolean {
+    return this.activeLayerId === 'satellite' || this.activeLayerId === 'terrain';
+  }
+
+  private blockStyle(
+    highlight: boolean,
+    hover = false
+  ): import('leaflet').PathOptions {
+    const highContrast = this.usesHighContrastBoundaries();
+
+    if (highlight) {
+      if (highContrast) {
+        return {
+          color: '#ffffff',
+          weight: hover ? 4 : 3.5,
+          opacity: 1,
+          fillColor: '#5141e0',
+          fillOpacity: hover ? 0.45 : 0.38,
+          lineJoin: 'round',
+          lineCap: 'round',
+        };
+      }
+
+      return {
+        color: hover ? '#6254e3' : '#5141e0',
+        weight: hover ? 3.5 : 3,
+        opacity: 1,
+        fillColor: '#5141e0',
+        fillOpacity: hover ? 0.24 : 0.18,
+        lineJoin: 'round',
+        lineCap: 'round',
+      };
+    }
+
+    if (highContrast) {
+      return {
+        color: '#7dd3fc',
+        weight: 2.75,
+        opacity: 1,
+        fillColor: '#2563eb',
+        fillOpacity: 0.3,
+        lineJoin: 'round',
+        lineCap: 'round',
+      };
+    }
+
+    return {
+      color: '#004ac6',
+      weight: 1.25,
+      opacity: 0.5,
+      fillColor: '#004ac6',
+      fillOpacity: 0.04,
+      dashArray: '6 8',
+      lineJoin: 'round',
+      lineCap: 'round',
+    };
   }
 }
