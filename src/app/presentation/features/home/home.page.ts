@@ -109,6 +109,15 @@ export class HomePage implements OnInit {
     window.open(`${baseUrl}/projects`, '_blank');
   }
 
+  protected openProjectForEdit(projectId: string): void {
+    const formData = this.facade.mapFacadeRef.buildFormDataForEdit(projectId);
+    if (!formData) {
+      return;
+    }
+    sessionStorage.setItem('selectedProjectData', JSON.stringify(formData));
+    void this.router.navigate(['/projects']);
+  }
+
   protected navigateToCreateProject(): void {
     if (!this.canCreateProject()) {
       return;

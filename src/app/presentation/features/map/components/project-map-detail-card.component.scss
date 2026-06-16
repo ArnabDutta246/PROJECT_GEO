@@ -161,6 +161,34 @@
   color: #191c1e;
 }
 
+.pmd-card__actions {
+  flex-shrink: 0;
+}
+
+.pmd-card__edit-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  border: 0;
+  border-radius: 8px;
+  background: #004ac6;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 14px;
+  cursor: pointer;
+
+  .material-icons {
+    font-size: 18px;
+  }
+
+  &:hover {
+    background: #003da3;
+  }
+}
+
 .pmd-card__tabs {
   display: flex;
   gap: 4px;

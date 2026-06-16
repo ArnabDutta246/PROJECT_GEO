@@ -28,7 +28,9 @@ export class LeafletMapAdapter extends MapAdapter {
   private blockFeatures = new Map<string, BlockLayerInput>();
 
   async initialize(container: HTMLElement, options: MapInitOptions): Promise<void> {
-    this.L = await import('leaflet');
+    //this.L = await import('leaflet');
+    const leafletModule = await import('leaflet');
+    this.L = (leafletModule as { default?: LeafletModule }).default ?? leafletModule;
     this.map = this.L.map(container, {
       center: options.center,
       zoom: options.zoom,

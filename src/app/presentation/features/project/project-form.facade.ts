@@ -667,6 +667,7 @@ export class ProjectFormFacade {
     }
     try {
       const projectData: IProjectData = JSON.parse(projectDataStr);
+      this.resetForm();
       this.bindProjectData(projectData, mapComponent);
       sessionStorage.removeItem('selectedProjectData');
     } catch (error) {
@@ -745,8 +746,68 @@ export class ProjectFormFacade {
         next.mouzaName = project.mouzaName;
       }
 
+      if (project.nearestLandmark) {
+        next.nearestLandmark = project.nearestLandmark;
+      }
+
+      if (project.contactName) {
+        next.contactName = project.contactName;
+      }
+
+      if (project.contactNumber) {
+        next.contactNumber = project.contactNumber;
+      }
+
+      if (project.contactEmail) {
+        next.contactEmail = project.contactEmail;
+      }
+
+      if (project.assignedToUserId) {
+        next.assignedToUserId = project.assignedToUserId;
+      }
+
+      if (project.plannedStartDate) {
+        next.plannedStartDate = project.plannedStartDate;
+      }
+
+      if (project.plannedEndDate) {
+        next.plannedEndDate = project.plannedEndDate;
+      }
+
+      if (project.actualStartDate) {
+        next.actualStartDate = project.actualStartDate;
+      }
+
+      if (project.actualEndDate) {
+        next.actualEndDate = project.actualEndDate;
+      }
+
+      if (project.selectedStateId) {
+        next.selectedStateId = project.selectedStateId;
+      }
+
+      if (project.selectedDistrictId) {
+        next.selectedDistrictId = project.selectedDistrictId;
+      }
+
+      if (project.selectedBlockId) {
+        next.selectedBlockId = project.selectedBlockId;
+      }
+
+      if (project.numericId) {
+        next.numericId = project.numericId;
+      }
+
       return next;
     });
+
+    if (project.selectedStateId) {
+      void this.onWizardStateChange(
+        project.selectedStateId,
+        project.selectedDistrictId ?? null,
+        project.selectedBlockId ?? null
+      );
+    }
 
     const { latitude, longitude } = this.formData();
     if (latitude !== null && longitude !== null) {

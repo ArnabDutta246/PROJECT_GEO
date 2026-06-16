@@ -45,6 +45,13 @@
       </div>
     </section>
 
+    <div class="pmd-card__actions">
+      <button type="button" class="pmd-card__edit-btn" (click)="onEdit()">
+        <span class="material-icons" aria-hidden="true">edit</span>
+        Edit Project
+      </button>
+    </div>
+
     <nav class="pmd-card__tabs" aria-label="Project detail sections">
       @for (tab of tabOptions; track tab.id) {
         <button

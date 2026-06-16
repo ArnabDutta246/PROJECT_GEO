@@ -33,6 +33,11 @@ import {
   projectMapDetailCardFromProject,
   ProjectMapDetailCardViewModel,
 } from './models/project-map-detail-card.view-model';
+import { IProjectData } from '@presentation/features/project/models/legacy-project-data';
+import {
+  projectPinToFormData,
+  projectToFormData,
+} from '@presentation/features/project/models/project-to-form-data.mapper';
 
 const AP_CENTER: [number, number] = [28.2, 94.5];
 const AP_DEFAULT_ZOOM = 8;
@@ -239,6 +244,20 @@ export class MapFacade {
 
   invalidateSize(): void {
     this.mapAdapter.invalidateSize();
+  }
+
+  buildFormDataForEdit(projectId: string): IProjectData | null {
+    const project = this.projectsById.get(projectId);
+    if (project) {
+      return projectToFormData(project);
+    }
+
+    const pin = this.pins().find((item) => item.id === projectId);
+    if (pin) {
+      return projectPinToFormData(pin);
+    }
+
+    return null;
   }
 
   private openSummary(projectId: string): void {

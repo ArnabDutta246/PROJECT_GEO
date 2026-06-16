@@ -285,6 +285,7 @@
             [open]="facade.mapFacadeRef.summaryOpen()"
             [detail]="facade.mapFacadeRef.summary()"
             (closed)="closeSummary()"
+            (editRequested)="openProjectForEdit($event)"
           ></app-project-map-detail-card>
         }
       </section>

@@ -19,6 +19,7 @@ export class ProjectMapDetailCardComponent {
   readonly detail = input<ProjectMapDetailCardViewModel | null>(null);
   readonly open = input(false);
   readonly closed = output<void>();
+  readonly editRequested = output<string>();
 
   protected readonly placeholderSrc = PROJECT_IMAGE_PLACEHOLDER;
   protected readonly tabOptions = PROJECT_DETAIL_TABS;
@@ -50,6 +51,13 @@ export class ProjectMapDetailCardComponent {
 
   protected onClose(): void {
     this.closed.emit();
+  }
+
+  protected onEdit(): void {
+    const id = this.detail()?.id;
+    if (id) {
+      this.editRequested.emit(id);
+    }
   }
 
   protected onImageError(event: Event): void {
