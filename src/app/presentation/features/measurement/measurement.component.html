@@ -1,0 +1,304 @@
+<div class="home-dashboard">
+
+  <!-- ═══════════════════  LEFT NAV RAIL  ═══════════════════ -->
+  <aside class="nav-rail" aria-label="Primary navigation">
+    <span class="material-icons nav-logo">map</span>
+
+    <nav class="nav-rail-items">
+      <button type="button" class="nav-rail-btn" [routerLink]="['/home']" aria-label="Map view"
+              title="Map view">
+        <span class="material-icons">map</span>
+      </button>
+      <button type="button" class="nav-rail-btn" aria-label="Layers" title="Layers">
+        <span class="material-icons">layers</span>
+      </button>
+      <button type="button" class="nav-rail-btn" [routerLink]="['/projects']" aria-label="Projects"
+              title="Projects">
+        <span class="material-icons">add</span>
+      </button>
+      <button type="button" class="nav-rail-btn" aria-label="Analytics" title="Analytics">
+        <span class="material-icons">bar_chart</span>
+      </button>
+      <button type="button" class="nav-rail-btn active" aria-label="Measurement"
+              title="Measurement" aria-current="page">
+        <span class="material-icons">square_foot</span>
+      </button>
+      <button type="button" class="nav-rail-btn" aria-label="Documents" title="Documents">
+        <span class="material-icons">description</span>
+      </button>
+      <button type="button" class="nav-rail-btn" aria-label="Settings" title="Settings">
+        <span class="material-icons">settings</span>
+      </button>
+    </nav>
+
+    <div class="nav-rail-footer">
+      <button type="button" class="nav-rail-btn" aria-label="Help" title="Help">
+        <span class="material-icons">help</span>
+      </button>
+      <button type="button" class="nav-rail-btn" aria-label="Account" title="Account">
+        <span class="material-icons">account_circle</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ═══════════════════  MAIN CONTENT  ═══════════════════ -->
+  <div class="home-main">
+
+    <!-- ─── Top filter bar (matches home page layout) ─── -->
+    <header class="home-topbar">
+      <h1 class="portal-title">measurement</h1>
+      <div class="filter-group">
+        <div class="filter-item">
+          <span class="filter-label">Geographic Level</span>
+          <span class="filter-value-text">ARUNACHAL PRADESH</span>
+        </div>
+        <div class="filter-item">
+          <span class="filter-label">Region</span>
+          <span class="filter-value-text">All</span>
+        </div>
+        <div class="filter-item">
+          <span class="filter-label">Block</span>
+          <span class="filter-value-text">All</span>
+        </div>
+        <div class="filter-item">
+          <span class="filter-label">Year</span>
+          <span class="filter-value-text">2024</span>
+        </div>
+        <div class="filter-item">
+          <span class="filter-label">Project Type</span>
+          <span class="filter-value-text">All</span>
+        </div>
+        <div class="filter-item">
+          <span class="filter-label">Status</span>
+          <span class="filter-value-text">Active</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- ─── Body: sidebar + map ─── -->
+    <div class="home-body">
+
+      <!-- ═══════  MEASUREMENT SIDEBAR  ═══════ -->
+      <aside class="meas-sidebar" [class.meas-sidebar--collapsed]="sidebarCollapsed()">
+        <div class="meas-sidebar__inner">
+
+          <!-- Sidebar header -->
+          <div class="meas-sidebar__head">
+            <h2 class="meas-sidebar__title">Map Measurement</h2>
+            <button type="button" class="icon-btn" (click)="toggleSidebar()"
+                    [attr.aria-label]="sidebarCollapsed() ? 'Expand sidebar' : 'Collapse sidebar'"
+                    [title]="sidebarCollapsed() ? 'Expand sidebar' : 'Collapse sidebar'">
+              <span class="material-icons">
+                {{ sidebarCollapsed() ? 'chevron_right' : 'chevron_left' }}
+              </span>
+            </button>
+          </div>
+
+          <!-- Scrollable content -->
+          <div class="meas-sidebar__scroll">
+
+            <!-- ── Tool-type selector ── -->
+            <div class="meas-sidebar__section">
+              <p class="meas-section-label">Select Measurement Type</p>
+
+              <!-- Area card -->
+              <button
+                type="button"
+                class="meas-card"
+                [class.meas-card--active]="activeMode() === 'area'"
+                (click)="selectMode('area')"
+                aria-pressed="{{ activeMode() === 'area' }}"
+              >
+                <div class="meas-card__icon">
+                  <!-- Polygon SVG icon -->
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
+                       aria-hidden="true" width="24" height="24">
+                    <polygon points="12,3 21,9 18,20 6,20 3,9"
+                             stroke="currentColor" stroke-width="2"
+                             stroke-linejoin="round"
+                             fill="currentColor" fill-opacity="0.15"/>
+                    <circle cx="12" cy="3" r="2" fill="currentColor"/>
+                    <circle cx="21" cy="9" r="2" fill="currentColor"/>
+                    <circle cx="18" cy="20" r="2" fill="currentColor"/>
+                    <circle cx="6"  cy="20" r="2" fill="currentColor"/>
+                    <circle cx="3"  cy="9"  r="2" fill="currentColor"/>
+                  </svg>
+                </div>
+                <div class="meas-card__body">
+                  <span class="meas-card__name">Area Measurement</span>
+                  <span class="meas-card__desc">Draw a polygon on the map to calculate its area.</span>
+                </div>
+                @if (activeMode() === 'area') {
+                  <div class="meas-card__check" aria-hidden="true">
+                    <span class="material-icons">check</span>
+                  </div>
+                }
+              </button>
+
+              <!-- Distance card -->
+              <button
+                type="button"
+                class="meas-card"
+                [class.meas-card--active]="activeMode() === 'distance'"
+                (click)="selectMode('distance')"
+                aria-pressed="{{ activeMode() === 'distance' }}"
+              >
+                <div class="meas-card__icon">
+                  <!-- Polyline SVG icon -->
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
+                       aria-hidden="true" width="24" height="24">
+                    <polyline points="3,18 8,10 14,14 21,6"
+                              stroke="currentColor" stroke-width="2"
+                              stroke-linejoin="round" stroke-linecap="round"/>
+                    <circle cx="3"  cy="18" r="2" fill="currentColor"/>
+                    <circle cx="8"  cy="10" r="2" fill="currentColor"/>
+                    <circle cx="14" cy="14" r="2" fill="currentColor"/>
+                    <circle cx="21" cy="6"  r="2" fill="currentColor"/>
+                  </svg>
+                </div>
+                <div class="meas-card__body">
+                  <span class="meas-card__name">Distance Measurement</span>
+                  <span class="meas-card__desc">Draw a line with multiple points to calculate total distance.</span>
+                </div>
+                @if (activeMode() === 'distance') {
+                  <div class="meas-card__check" aria-hidden="true">
+                    <span class="material-icons">check</span>
+                  </div>
+                }
+              </button>
+            </div>
+
+            <!-- ── Inline result panel ── -->
+            @if (isComplete() && areaResult()) {
+              <div class="meas-result meas-result--area">
+                <p class="meas-result__title">
+                  <span class="material-icons">crop_square</span> Area Result
+                </p>
+                <div class="meas-result__row">
+                  <span class="meas-result__label">Square metres</span>
+                  <strong class="meas-result__val">
+                    {{ areaResult()!.sqMeters | number:'1.0-0' }} m²
+                  </strong>
+                </div>
+                <div class="meas-result__row">
+                  <span class="meas-result__label">Hectares</span>
+                  <strong class="meas-result__val">
+                    {{ areaResult()!.hectares | number:'1.2-2' }} ha
+                  </strong>
+                </div>
+                <div class="meas-result__row">
+                  <span class="meas-result__label">Square km</span>
+                  <strong class="meas-result__val">
+                    {{ areaResult()!.sqKilometers | number:'1.2-4' }} km²
+                  </strong>
+                </div>
+              </div>
+            }
+
+            @if (isComplete() && distanceResult()) {
+              <div class="meas-result meas-result--dist">
+                <p class="meas-result__title">
+                  <span class="material-icons">straighten</span> Distance Result
+                </p>
+                <div class="meas-result__row">
+                  <span class="meas-result__label">Total path</span>
+                  <strong class="meas-result__val">
+                    {{ distanceResult()!.totalKm | number:'1.2-2' }} km
+                  </strong>
+                </div>
+                <div class="meas-result__row">
+                  <span class="meas-result__label">Straight line</span>
+                  <strong class="meas-result__val">
+                    {{ distanceResult()!.straightKm | number:'1.2-2' }} km
+                  </strong>
+                </div>
+              </div>
+            }
+
+            <!-- ── Instructions ── -->
+            <div class="meas-instructions">
+              <p class="meas-section-label">Measurement Instructions</p>
+
+              <div class="meas-instr-card">
+                <p class="meas-instr-card__heading">
+                  <span class="material-icons meas-instr-card__icon">info</span>
+                  Area Measurement
+                </p>
+                <ul class="meas-instr-card__list">
+                  <li>Click on the map to add polygon vertices.</li>
+                  <li>Double-click to finish drawing.</li>
+                </ul>
+              </div>
+
+              <div class="meas-instr-card">
+                <p class="meas-instr-card__heading">
+                  <span class="material-icons meas-instr-card__icon">info</span>
+                  Distance Measurement
+                </p>
+                <ul class="meas-instr-card__list">
+                  <li>Click on the map to add points.</li>
+                  <li>Double-click on the last point to finish.</li>
+                </ul>
+              </div>
+            </div>
+
+          </div><!-- /.meas-sidebar__scroll -->
+
+          <!-- ── Action buttons (pinned to bottom) ── -->
+          <div class="meas-sidebar__actions">
+            <button
+              type="button"
+              class="meas-action-btn meas-action-btn--outline"
+              (click)="clearMeasurement()"
+              [disabled]="activeMode() === null"
+              title="Remove current drawing"
+            >
+              <span class="material-icons">delete_outline</span>
+              Clear
+            </button>
+            <button
+              type="button"
+              class="meas-action-btn meas-action-btn--primary"
+              (click)="resetMeasurement()"
+              [disabled]="activeMode() === null && drawingState() === 'idle'"
+              title="Remove drawing and return to initial state"
+            >
+              <span class="material-icons">refresh</span>
+              Reset
+            </button>
+          </div>
+
+        </div><!-- /.meas-sidebar__inner -->
+      </aside>
+
+      <!-- ═══════  MAP WORKSPACE  ═══════ -->
+      <section class="map-workspace" aria-label="Measurement map">
+
+        <!-- Layer switcher (top-right of map) -->
+        <div class="map-layer-switcher">
+          @for (layer of availableLayers; track layer.key) {
+            <button
+              type="button"
+              class="layer-btn"
+              [class.active]="currentLayer() === layer.key"
+              (click)="switchMapLayer(layer.key)"
+            >
+              {{ layer.label }}
+            </button>
+          }
+        </div>
+
+        <!-- Leaflet map target -->
+        <div id="measurement-map" class="meas-map"></div>
+
+        <!-- Status bar (bottom of map area) -->
+        <div class="meas-status-bar">
+          <span class="material-icons meas-status-bar__icon">info</span>
+          <span class="meas-status-bar__text">{{ statusMessage() }}</span>
+        </div>
+
+      </section>
+
+    </div><!-- /.home-body -->
+  </div><!-- /.home-main -->
+</div><!-- /.home-dashboard -->

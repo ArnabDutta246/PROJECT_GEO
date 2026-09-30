@@ -2,7 +2,7 @@ import { Component, OnInit, Inject, PLATFORM_ID, signal, inject } from '@angular
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService, IDefaultUser } from '../../../services/auth/auth';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { HomeFacade } from './home.facade';
 import { HomeMapComponent } from './components/home-map.component';
 import { ProjectMapDetailCardComponent } from '@presentation/features/map/components/project-map-detail-card.component';
@@ -19,7 +19,7 @@ import { ProjectSidebarItem } from './models/project-sidebar-item.vm';
 
 @Component({
   selector: 'app-home-page',
-  imports: [CommonModule, FormsModule, HomeMapComponent, ProjectMapDetailCardComponent, AreaSummaryCardComponent],
+  imports: [CommonModule, FormsModule, RouterLink, HomeMapComponent, ProjectMapDetailCardComponent, AreaSummaryCardComponent],
   templateUrl: './home.page.html',
   styleUrl: './home.page.scss',
 })
@@ -29,6 +29,13 @@ export class HomePage implements OnInit {
   protected searchTerm = '';
   protected selectedYear = '2024';
   protected selectedStatus = 'Active';
+  protected sidebarOpen = signal(true);
+
+  protected toggleSidebar(): void {
+    this.sidebarOpen.update((v) => !v);
+    // Reflow the map after the CSS transition finishes
+    setTimeout(() => void this.facade.mapFacadeRef.refreshMap(), 310);
+  }
 
   protected readonly schemeTypeCatalog = SCHEME_TYPE_CATALOG;
 
@@ -145,6 +152,10 @@ export class HomePage implements OnInit {
 
   protected closeAreaSummary(): void {
     this.facade.mapFacadeRef.closeAreaSummary();
+  }
+
+  protected navigateToMeasurement(): void {
+    void this.router.navigate(['/measurement']);
   }
 
   switchLayer(layerName: string): void {

@@ -44,7 +44,9 @@ export class App implements OnInit {
       url === '/home' ||
       url.startsWith('/home?') ||
       url === '/projects' ||
-      url.startsWith('/projects?');
+      url.startsWith('/projects?') ||
+      url === '/measurement' ||
+      url.startsWith('/measurement?');
     this.showHeader = !hideHeader;
   }
 }

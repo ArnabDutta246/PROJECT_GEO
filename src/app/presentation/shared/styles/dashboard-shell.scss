@@ -1,6 +1,7 @@
-// Shared dashboard chrome used by home and project form pages.
+// Shared dashboard chrome used by home, project form and measurement pages.
 app-home-page,
-app-project-form-page {
+app-project-form-page,
+app-measurement {
   display: block;
   height: 100vh;
   width: 100%;

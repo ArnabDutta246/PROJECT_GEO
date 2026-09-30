@@ -3,6 +3,7 @@ import { authGuard } from '@core/guards/auth.guard';
 import { LoginPage } from '@presentation/features/login/login.page';
 import { HomePage } from '@presentation/features/home/home.page';
 import { ProjectFormPage } from '@presentation/features/project/project-form.page';
+import { MeasurementComponent } from '@presentation/features/measurement/measurement.component';
 import { MapComponent } from './map/map';
 
 export const routes: Routes = [
@@ -11,5 +12,6 @@ export const routes: Routes = [
   { path: 'home', component: HomePage, canActivate: [authGuard] },
   { path: 'map', component: MapComponent, canActivate: [authGuard] },
   { path: 'projects', component: ProjectFormPage, canActivate: [authGuard] },
+  { path: 'measurement', component: MeasurementComponent, canActivate: [authGuard] },
   { path: '**', redirectTo: 'login' },
 ];
