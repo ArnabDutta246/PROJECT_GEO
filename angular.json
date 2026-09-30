@@ -57,6 +57,7 @@
           },
           "configurations": {
             "production": {
+              "baseHref": "/GEOWEB/",
               "fileReplacements": [
                 {
                   "replace": "src/environments/environment.ts",

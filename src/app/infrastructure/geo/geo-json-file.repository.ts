@@ -5,13 +5,21 @@ import { GeoBoundary } from '@domain/entities/geo-boundary.entity';
 import { GeoBoundaryRepository } from '@domain/repositories/geo-boundary.repository';
 import { ApplicationError } from '@application/errors/application.error';
 import { normalizeGeoName } from '@infrastructure/http/mappers/jurisdiction.mapper';
+import { environment } from '@env/environment';
 import {
   filterBlocksByDistrict,
   filterBlocksByDistrictAndBlock,
   mapFeatureCollection,
 } from './mappers/geojson-block.mapper';
 
-const BLOCK_GEOJSON_URL = '/geojson/ARUNACHAL_PRADESH_BLOCK.geojson';
+const BLOCK_GEOJSON_URL = appAssetUrl('/geojson/ARUNACHAL_PRADESH_BLOCK.geojson');
+
+function appAssetUrl(path: string): string {
+  const base = environment.baseHref.endsWith('/')
+    ? environment.baseHref
+    : `${environment.baseHref}/`;
+  return `${base}${path.replace(/^\//, '')}`;
+}
 
 @Injectable({ providedIn: 'root' })
 export class GeoJsonFileRepository extends GeoBoundaryRepository {
