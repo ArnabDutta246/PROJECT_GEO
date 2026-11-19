@@ -1,51 +1,13 @@
 <div class="home-dashboard">
 
-  <!-- ═══════════════════  LEFT NAV RAIL  ═══════════════════ -->
-  <aside class="nav-rail" aria-label="Primary navigation">
-    <span class="material-icons nav-logo">map</span>
-
-    <nav class="nav-rail-items">
-      <button type="button" class="nav-rail-btn" [routerLink]="['/home']" aria-label="Map view"
-              title="Map view">
-        <span class="material-icons">map</span>
-      </button>
-      <button type="button" class="nav-rail-btn" aria-label="Layers" title="Layers">
-        <span class="material-icons">layers</span>
-      </button>
-      <button type="button" class="nav-rail-btn" [routerLink]="['/projects']" aria-label="Projects"
-              title="Projects">
-        <span class="material-icons">add</span>
-      </button>
-      <button type="button" class="nav-rail-btn" aria-label="Analytics" title="Analytics">
-        <span class="material-icons">bar_chart</span>
-      </button>
-      <button type="button" class="nav-rail-btn active" aria-label="Measurement"
-              title="Measurement" aria-current="page">
-        <span class="material-icons">square_foot</span>
-      </button>
-      <button type="button" class="nav-rail-btn" aria-label="Documents" title="Documents">
-        <span class="material-icons">description</span>
-      </button>
-      <button type="button" class="nav-rail-btn" aria-label="Settings" title="Settings">
-        <span class="material-icons">settings</span>
-      </button>
-    </nav>
-
-    <div class="nav-rail-footer">
-      <button type="button" class="nav-rail-btn" aria-label="Help" title="Help">
-        <span class="material-icons">help</span>
-      </button>
-      <button type="button" class="nav-rail-btn" aria-label="Account" title="Account">
-        <span class="material-icons">account_circle</span>
-      </button>
-    </div>
-  </aside>
+  <app-nav-rail activeItem="measurement" />
 
   <!-- ═══════════════════  MAIN CONTENT  ═══════════════════ -->
   <div class="home-main">
 
     <!-- ─── Top filter bar (matches home page layout) ─── -->
     <header class="home-topbar">
+      <app-topbar-back-button />
       <h1 class="portal-title">measurement</h1>
       <div class="filter-group">
         <div class="filter-item">

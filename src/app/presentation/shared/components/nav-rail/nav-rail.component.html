@@ -1,0 +1,95 @@
+<aside class="nav-rail" aria-label="Primary navigation">
+  <span class="material-icons nav-logo">map</span>
+  <nav class="nav-rail-items">
+    <button
+      type="button"
+      class="nav-rail-btn"
+      [class.active]="activeItem() === 'map'"
+      [attr.aria-current]="activeItem() === 'map' ? 'page' : null"
+      aria-label="Map view"
+      title="Map view"
+      (click)="navigateToMap()"
+    >
+      <span class="material-icons">map</span>
+    </button>
+    
+    @if (canCreateProject()) {
+      <button
+        type="button"
+        class="nav-rail-btn"
+        [class.active]="activeItem() === 'newProject'"
+        [attr.aria-current]="activeItem() === 'newProject' ? 'page' : null"
+        aria-label="New project"
+        title="New project"
+        (click)="navigateToCreateProject()"
+      >
+        <span class="material-icons">add</span>
+      </button>
+    }
+    <button
+      type="button"
+      class="nav-rail-btn"
+      [class.active]="activeItem() === 'measurement'"
+      [attr.aria-current]="activeItem() === 'measurement' ? 'page' : null"
+      aria-label="Measurement"
+      title="Measurement"
+      (click)="navigateToMeasurement()"
+    >
+      <span class="material-icons">square_foot</span>
+    </button>
+    <button type="button" class="nav-rail-btn" aria-label="Layers" title="Layers">
+      <span class="material-icons">layers</span>
+    </button>
+    <button type="button" class="nav-rail-btn" aria-label="Analytics" title="Analytics">
+      <span class="material-icons">bar_chart</span>
+    </button>
+    <button type="button" class="nav-rail-btn" aria-label="Documents" title="Documents">
+      <span class="material-icons">description</span>
+    </button>
+    <button type="button" class="nav-rail-btn" aria-label="Settings" title="Settings">
+      <span class="material-icons">settings</span>
+    </button>
+  </nav>
+  <div class="nav-rail-footer">
+    <button type="button" class="nav-rail-btn" aria-label="Help" title="Help">
+      <span class="material-icons">help</span>
+    </button>
+    <div class="nav-rail-account">
+      <button
+        type="button"
+        class="nav-rail-btn"
+        [class.active]="accountOpen()"
+        aria-label="Account"
+        title="Account"
+        aria-haspopup="dialog"
+        [attr.aria-expanded]="accountOpen()"
+        (click)="toggleAccountMenu($event)"
+      >
+        <span class="material-icons">account_circle</span>
+      </button>
+      @if (accountOpen()) {
+        <div class="nav-rail-account-popover" role="dialog" aria-label="Account details">
+          @if (accountUser(); as user) {
+            <dl class="nav-rail-account-fields">
+              <div class="nav-rail-account-row">
+                <dt>Name</dt>
+                <dd>{{ user.name }}</dd>
+              </div>
+              <div class="nav-rail-account-row">
+                <dt>User ID</dt>
+                <dd>{{ user.userId }}</dd>
+              </div>
+              <div class="nav-rail-account-row">
+                <dt>Role</dt>
+                <dd>{{ user.role }}</dd>
+              </div>
+            </dl>
+            <button type="button" class="nav-rail-logout-btn" (click)="logout()">Logout</button>
+          } @else {
+            <p class="nav-rail-account-empty">Not signed in</p>
+          }
+        </div>
+      }
+    </div>
+  </div>
+</aside>

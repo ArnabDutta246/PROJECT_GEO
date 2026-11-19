@@ -9,7 +9,8 @@ import {
   computed,
 } from '@angular/core';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { NavRailComponent } from '@presentation/shared/components/nav-rail/nav-rail.component';
+import { TopbarBackButtonComponent } from '@presentation/shared/components/topbar-back-button/topbar-back-button.component';
 import type * as L from 'leaflet';
 
 // ─── Domain types ────────────────────────────────────────────────────────────
@@ -35,7 +36,7 @@ type LeafletModule = typeof L;
 @Component({
   selector: 'app-measurement',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, NavRailComponent, TopbarBackButtonComponent],
   templateUrl: './measurement.component.html',
   styleUrl: './measurement.component.scss',
 })

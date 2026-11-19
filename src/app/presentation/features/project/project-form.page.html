@@ -1,38 +1,9 @@
 <div class="home-dashboard">
-  <aside class="nav-rail" aria-label="Primary navigation">
-    <span class="material-icons nav-logo">map</span>
-    <nav class="nav-rail-items">
-      <button type="button" class="nav-rail-btn" aria-label="Map view" (click)="goHome()">
-        <span class="material-icons">map</span>
-      </button>
-      <button type="button" class="nav-rail-btn" aria-label="Layers">
-        <span class="material-icons">layers</span>
-      </button>
-      <button type="button" class="nav-rail-btn active" aria-label="New project" title="New project">
-        <span class="material-icons">add</span>
-      </button>
-      <button type="button" class="nav-rail-btn" aria-label="Analytics">
-        <span class="material-icons">bar_chart</span>
-      </button>
-      <button type="button" class="nav-rail-btn" aria-label="Documents">
-        <span class="material-icons">description</span>
-      </button>
-      <button type="button" class="nav-rail-btn" aria-label="Settings">
-        <span class="material-icons">settings</span>
-      </button>
-    </nav>
-    <div class="nav-rail-footer">
-      <button type="button" class="nav-rail-btn" aria-label="Help">
-        <span class="material-icons">help</span>
-      </button>
-      <button type="button" class="nav-rail-btn" aria-label="Account">
-        <span class="material-icons">account_circle</span>
-      </button>
-    </div>
-  </aside>
+  <app-nav-rail activeItem="newProject" />
 
   <div class="home-main">
     <header class="home-topbar">
+      <app-topbar-back-button />
       <h1 class="portal-title">webgap</h1>
       <div class="filter-group filter-group--compact">
         <div class="filter-item">

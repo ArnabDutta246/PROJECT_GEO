@@ -1,8 +1,9 @@
-import { Component, OnInit, Inject, PLATFORM_ID, signal, inject } from '@angular/core';
+import { Component, OnInit, Inject, PLATFORM_ID, computed, signal, inject } from '@angular/core';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService, IDefaultUser } from '../../../services/auth/auth';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
+import { NavRailComponent } from '@presentation/shared/components/nav-rail/nav-rail.component';
 import { HomeFacade } from './home.facade';
 import { HomeMapComponent } from './components/home-map.component';
 import { ProjectMapDetailCardComponent } from '@presentation/features/map/components/project-map-detail-card.component';
@@ -19,12 +20,25 @@ import { ProjectSidebarItem } from './models/project-sidebar-item.vm';
 
 @Component({
   selector: 'app-home-page',
-  imports: [CommonModule, FormsModule, RouterLink, HomeMapComponent, ProjectMapDetailCardComponent, AreaSummaryCardComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    NavRailComponent,
+    HomeMapComponent,
+    ProjectMapDetailCardComponent,
+    AreaSummaryCardComponent,
+  ],
   templateUrl: './home.page.html',
   styleUrl: './home.page.scss',
 })
 export class HomePage implements OnInit {
   protected readonly facade = inject(HomeFacade);
+
+  protected readonly homeCreateJurisdiction = computed(() => ({
+    stateId: this.facade.selectedStateId(),
+    districtId: this.facade.selectedDistrictId(),
+    blockId: this.facade.selectedBlockId(),
+  }));
 
   protected searchTerm = '';
   protected selectedYear = '2024';
@@ -152,10 +166,6 @@ export class HomePage implements OnInit {
 
   protected closeAreaSummary(): void {
     this.facade.mapFacadeRef.closeAreaSummary();
-  }
-
-  protected navigateToMeasurement(): void {
-    void this.router.navigate(['/measurement']);
   }
 
   switchLayer(layerName: string): void {

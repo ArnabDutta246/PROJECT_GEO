@@ -1,6 +1,7 @@
 import { AfterViewInit, Component, inject, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { NavRailComponent } from '@presentation/shared/components/nav-rail/nav-rail.component';
+import { TopbarBackButtonComponent } from '@presentation/shared/components/topbar-back-button/topbar-back-button.component';
 import { MapForInsert } from '../../../project/map-for-insert/map-for-insert';
 import { ProjectFormFacade } from './project-form.facade';
 import { ProjectStepperComponent } from './components/project-stepper.component';
@@ -24,13 +25,14 @@ import { StepReviewComponent } from './components/step-review.component';
     StepDocumentationComponent,
     StepMediaComponent,
     StepReviewComponent,
+    NavRailComponent,
+    TopbarBackButtonComponent,
   ],
   templateUrl: './project-form.page.html',
   styleUrl: './project-form.page.scss',
 })
 export class ProjectFormPage implements AfterViewInit {
   protected readonly facade = inject(ProjectFormFacade);
-  private readonly router = inject(Router);
 
   @ViewChild(MapForInsert) mapComponent!: MapForInsert;
 
@@ -57,7 +59,4 @@ export class ProjectFormPage implements AfterViewInit {
     return this.facade.stateOptions().find((state) => state.id === stateId)?.label ?? 'Select State';
   }
 
-  protected goHome(): void {
-    void this.router.navigate(['/home']);
-  }
 }

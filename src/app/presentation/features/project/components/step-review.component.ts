@@ -1,11 +1,12 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ProjectFormFacade } from '../project-form.facade';
+import { ProjectFileUploadComponent } from './project-file-upload.component';
 
 @Component({
   selector: 'app-step-review',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ProjectFileUploadComponent],
   templateUrl: './step-review.component.html',
   styleUrl: './step-review.component.scss',
 })

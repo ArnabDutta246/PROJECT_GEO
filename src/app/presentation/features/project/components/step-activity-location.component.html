@@ -26,18 +26,6 @@
     </div>
 
     <div class="pf-field">
-      <label class="pf-label">Name of Activity / Scheme</label>
-      <input
-        type="text"
-        class="pf-input"
-        [ngModel]="facade.formData().activityName"
-        (ngModelChange)="facade.patchFormData({ activityName: $event })"
-        name="activityName"
-        placeholder="Enter activity/scheme name"
-      />
-    </div>
-
-    <div class="pf-field">
       <label class="pf-label">Scheme Type</label>
       <select
         class="pf-select"
@@ -61,6 +49,18 @@
         />
       }
     </div>
+    <div class="pf-field">
+      <label class="pf-label">Name of Activity / Scheme</label>
+      <input
+        type="text"
+        class="pf-input"
+        [ngModel]="facade.formData().activityName"
+        (ngModelChange)="facade.patchFormData({ activityName: $event })"
+        name="activityName"
+        placeholder="Enter activity/scheme name"
+      />
+    </div>
+
   </div>
 
   <p class="pf-section-title">Jurisdiction &amp; Contact</p>

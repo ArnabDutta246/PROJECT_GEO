@@ -4,10 +4,11 @@ import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { ThemeToggleComponent } from "../theme-toggle/theme-toggle";
 import { ThemeService } from '../theme.service';
 import { AuthService, IDefaultUser } from '../services/auth/auth';
+import { TopbarBackButtonComponent } from '@presentation/shared/components/topbar-back-button/topbar-back-button.component';
 
 @Component({
   selector: 'app-header',
-  imports: [ThemeToggleComponent, CommonModule, RouterLink, RouterLinkActive],
+  imports: [ThemeToggleComponent, CommonModule, RouterLink, RouterLinkActive, TopbarBackButtonComponent],
   templateUrl: './header.html',
   styleUrl: './header.scss',
 })

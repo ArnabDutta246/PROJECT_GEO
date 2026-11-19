@@ -55,9 +55,13 @@
         <span class="pf-review-label">Planned Dates</span>
         <span class="pf-review-value">{{ facade.formData().plannedStartDate }} – {{ facade.formData().plannedEndDate }}</span>
       </div>
-      <div class="pf-review-item">
+      <div class="pf-review-item pf-span-full">
         <span class="pf-review-label">AOI Files</span>
-        <span class="pf-review-value">{{ facade.aoiFiles().length }} file(s)</span>
+        @if (facade.aoiFiles().length) {
+          <app-project-file-upload [listOnly]="true" [files]="facade.aoiFiles()" />
+        } @else {
+          <span class="pf-review-value">None</span>
+        }
       </div>
     </div>
   </section>
@@ -101,21 +105,37 @@
         <span class="pf-review-label">Fund Type</span>
         <span class="pf-review-value">{{ facade.getFundTypeLabel(facade.formData().fundType) }}</span>
       </div>
-      <div class="pf-review-item">
+      <div class="pf-review-item pf-span-full">
         <span class="pf-review-label">Beneficiary Docs</span>
-        <span class="pf-review-value">{{ facade.beneficiaryDocuments().length }} file(s)</span>
+        @if (facade.beneficiaryDocuments().length) {
+          <app-project-file-upload [listOnly]="true" [files]="facade.beneficiaryDocuments()" />
+        } @else {
+          <span class="pf-review-value">None</span>
+        }
       </div>
-      <div class="pf-review-item">
+      <div class="pf-review-item pf-span-full">
         <span class="pf-review-label">Plan Estimation</span>
-        <span class="pf-review-value">{{ facade.planEstimationFiles().length }} file(s)</span>
+        @if (facade.planEstimationFiles().length) {
+          <app-project-file-upload [listOnly]="true" [files]="facade.planEstimationFiles()" />
+        } @else {
+          <span class="pf-review-value">None</span>
+        }
       </div>
-      <div class="pf-review-item">
+      <div class="pf-review-item pf-span-full">
         <span class="pf-review-label">Tender Details</span>
-        <span class="pf-review-value">{{ facade.tenderDetailFiles().length }} file(s)</span>
+        @if (facade.tenderDetailFiles().length) {
+          <app-project-file-upload [listOnly]="true" [files]="facade.tenderDetailFiles()" />
+        } @else {
+          <span class="pf-review-value">None</span>
+        }
       </div>
-      <div class="pf-review-item">
+      <div class="pf-review-item pf-span-full">
         <span class="pf-review-label">Other Documents</span>
-        <span class="pf-review-value">{{ facade.otherDocuments().length }} file(s)</span>
+        @if (facade.otherDocuments().length) {
+          <app-project-file-upload [listOnly]="true" [files]="facade.otherDocuments()" />
+        } @else {
+          <span class="pf-review-value">None</span>
+        }
       </div>
     </div>
   </section>
@@ -130,7 +150,11 @@
     <div class="pf-review-grid">
       <div class="pf-review-item pf-span-full">
         <span class="pf-review-label">Uploaded Media</span>
-        <span class="pf-review-value">{{ facade.uploadedMedia().length }} file(s)</span>
+        @if (facade.uploadedMedia().length) {
+          <app-project-file-upload [listOnly]="true" [files]="facade.uploadedMedia()" />
+        } @else {
+          <span class="pf-review-value">None</span>
+        }
       </div>
     </div>
   </section>
